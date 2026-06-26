@@ -7,7 +7,6 @@ import { useRouter } from 'next/navigation'
 import { Loader2, CheckCircle2, AlertCircle, X, Check } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { toast } from '@/hooks/useToast'
-import Navbar from '@/components/shared/Navbar'
 
 // ─── Plan config (mirrors /pricing) ───────────────────────────────────────────
 
@@ -225,12 +224,9 @@ export default function SubscriptionPage() {
 
   if (loading) {
     return (
-      <>
-        <Navbar isLoggedIn />
-        <div className="flex min-h-[60vh] items-center justify-center">
-          <Loader2 className="h-6 w-6 animate-spin text-indigo-600" />
-        </div>
-      </>
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-indigo-600" />
+      </div>
     )
   }
 
@@ -240,8 +236,6 @@ export default function SubscriptionPage() {
 
   return (
     <>
-      <Navbar isLoggedIn />
-
       {/* Cancel confirmation dialog */}
       {showCancel && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
