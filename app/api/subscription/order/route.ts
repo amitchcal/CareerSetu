@@ -1,5 +1,6 @@
 ﻿import { NextRequest, NextResponse } from 'next/server'
 import Razorpay from 'razorpay'
+import { createSupabaseServerClient } from '@/lib/supabase-server'
 
 const PLAN_AMOUNTS: Record<string, number> = {
   starter: 19900, // paise (Rs.199)
@@ -8,6 +9,10 @@ const PLAN_AMOUNTS: Record<string, number> = {
 
 export async function POST(req: NextRequest) {
   try {
+    const supabase = createSupabaseServerClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return NextResponse.json({ error: 'Unauthorised.' }, { status: 401 })
+
     const { plan } = await req.json()
 
     const amount = PLAN_AMOUNTS[plan]

@@ -8,7 +8,7 @@ const footerLinks = {
   ],
   Company: [
     { label: 'About', href: '/about' },
-    { label: 'Contact', href: '/contact' },
+    { label: 'Contact', href: 'mailto:support@careersetu.in' },
   ],
   Legal: [
     { label: 'Terms', href: '/terms' },
@@ -17,8 +17,8 @@ const footerLinks = {
 }
 
 const socialLinks = [
-  { label: 'LinkedIn', href: 'https://linkedin.com' },
-  { label: 'GitHub', href: 'https://github.com' },
+  { label: 'LinkedIn', href: 'https://linkedin.com/company/careersetu' },
+  { label: 'GitHub', href: 'https://github.com/amitchcal/CareerSetu' },
 ]
 
 export default function Footer() {

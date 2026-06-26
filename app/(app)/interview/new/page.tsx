@@ -35,7 +35,7 @@ const LENGTH_OPTIONS: { value: SessionLength; label: string; sub: string; num: n
 const TIPS = [
   'Find a quiet place with no background noise.',
   'Speak naturally, as you would in a real interview.',
-  'You can review your recording before submitting each answer.',
+  'Tap the mic button when you finish your answer to move to the next question.',
 ]
 
 function expTodifficulty(exp: string | null): Difficulty {

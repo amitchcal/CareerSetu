@@ -187,9 +187,9 @@ export default function HomePage() {
 
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
               {ROLE_CARDS.map(({ icon: Icon, label }) => (
-                <a
+                <Link
                   key={label}
-                  href="#"
+                  href="/signup"
                   className="group flex flex-col items-center gap-3 rounded-2xl border border-gray-200 bg-white p-6 text-center shadow-sm hover:border-indigo-300 hover:shadow-md transition-all"
                 >
                   <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-50 group-hover:bg-indigo-100 transition-colors">
@@ -198,7 +198,7 @@ export default function HomePage() {
                   <span className="text-sm font-medium text-gray-700 group-hover:text-indigo-600 transition-colors">
                     {label}
                   </span>
-                </a>
+                </Link>
               ))}
             </div>
           </div>
@@ -236,67 +236,57 @@ export default function HomePage() {
               <p className="mt-3 text-gray-500">No hidden fees. Cancel anytime.</p>
             </div>
 
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
               {/* Free plan */}
-              <div className="rounded-2xl border-2 border-gray-200 bg-white p-8 flex flex-col gap-4">
+              <div className="rounded-2xl border-2 border-gray-200 bg-white p-7 flex flex-col gap-4">
                 <div>
                   <p className="text-sm font-semibold uppercase tracking-wider text-gray-400">Free</p>
                   <p className="mt-1 text-4xl font-bold text-gray-900">₹0</p>
                   <p className="mt-1 text-sm text-gray-500">Forever free</p>
                 </div>
                 <ul className="flex flex-col gap-2 text-sm text-gray-600">
-                  <li className="flex items-center gap-2">
-                    <span className="text-green-500 font-bold">✓</span>
-                    1 mock interview / week
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="text-green-500 font-bold">✓</span>
-                    AI feedback report
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="text-green-500 font-bold">✓</span>
-                    Hindi &amp; English
-                  </li>
+                  <li className="flex items-center gap-2"><span className="text-green-500 font-bold">✓</span>1 mock interview / week</li>
+                  <li className="flex items-center gap-2"><span className="text-green-500 font-bold">✓</span>AI feedback report</li>
+                  <li className="flex items-center gap-2"><span className="text-green-500 font-bold">✓</span>Hindi &amp; English</li>
                 </ul>
-                <Link
-                  href="/signup"
-                  className="mt-auto inline-flex items-center justify-center rounded-xl border-2 border-indigo-600 px-6 py-3 text-sm font-semibold text-indigo-600 hover:bg-indigo-50 transition-colors"
-                >
+                <Link href="/signup" className="mt-auto inline-flex items-center justify-center rounded-xl border-2 border-indigo-600 px-6 py-3 text-sm font-semibold text-indigo-600 hover:bg-indigo-50 transition-colors">
                   Get started free
                 </Link>
               </div>
 
               {/* Starter plan */}
-              <div className="rounded-2xl border-2 border-indigo-600 bg-indigo-600 p-8 flex flex-col gap-4 shadow-lg">
+              <div className="relative rounded-2xl border-2 border-amber-400 bg-white p-7 flex flex-col gap-4 shadow-lg">
+                <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-amber-500 px-3 py-1 text-xs font-bold text-white">Most Popular</span>
                 <div>
-                  <span className="inline-block rounded-full bg-amber-400 px-3 py-0.5 text-xs font-bold text-amber-900 mb-2">
-                    Most popular
-                  </span>
-                  <p className="text-sm font-semibold uppercase tracking-wider text-indigo-200">
-                    Starter
-                  </p>
-                  <p className="mt-1 text-4xl font-bold text-white">₹199</p>
-                  <p className="mt-1 text-sm text-indigo-200">per month</p>
+                  <p className="text-sm font-semibold uppercase tracking-wider text-indigo-600">Starter</p>
+                  <p className="mt-1 text-4xl font-bold text-gray-900">₹199</p>
+                  <p className="mt-1 text-sm text-gray-500">per month</p>
                 </div>
-                <ul className="flex flex-col gap-2 text-sm text-indigo-100">
-                  <li className="flex items-center gap-2">
-                    <span className="text-amber-400 font-bold">✓</span>
-                    Unlimited mock interviews
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="text-amber-400 font-bold">✓</span>
-                    Detailed per-question feedback
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="text-amber-400 font-bold">✓</span>
-                    Hindi &amp; English
-                  </li>
+                <ul className="flex flex-col gap-2 text-sm text-gray-600">
+                  <li className="flex items-center gap-2"><span className="text-indigo-500 font-bold">✓</span>Unlimited mock interviews</li>
+                  <li className="flex items-center gap-2"><span className="text-indigo-500 font-bold">✓</span>Detailed per-question feedback</li>
+                  <li className="flex items-center gap-2"><span className="text-indigo-500 font-bold">✓</span>Hindi &amp; English</li>
                 </ul>
-                <Link
-                  href="/signup"
-                  className="mt-auto inline-flex items-center justify-center rounded-xl bg-amber-500 px-6 py-3 text-sm font-semibold text-white hover:bg-amber-600 transition-colors shadow-sm"
-                >
+                <Link href="/signup" className="mt-auto inline-flex items-center justify-center rounded-xl bg-amber-500 px-6 py-3 text-sm font-semibold text-white hover:bg-amber-600 transition-colors shadow-sm">
                   Start free trial
+                </Link>
+              </div>
+
+              {/* Pro plan */}
+              <div className="rounded-2xl border-2 border-gray-200 bg-white p-7 flex flex-col gap-4">
+                <div>
+                  <p className="text-sm font-semibold uppercase tracking-wider text-gray-400">Pro</p>
+                  <p className="mt-1 text-4xl font-bold text-gray-900">₹499</p>
+                  <p className="mt-1 text-sm text-gray-500">per month</p>
+                </div>
+                <ul className="flex flex-col gap-2 text-sm text-gray-600">
+                  <li className="flex items-center gap-2"><span className="text-green-500 font-bold">✓</span>Unlimited interviews</li>
+                  <li className="flex items-center gap-2"><span className="text-green-500 font-bold">✓</span>All role categories</li>
+                  <li className="flex items-center gap-2"><span className="text-green-500 font-bold">✓</span>English, Hindi &amp; Hinglish</li>
+                  <li className="flex items-center gap-2"><span className="text-green-500 font-bold">✓</span>Company-style simulation</li>
+                </ul>
+                <Link href="/signup" className="mt-auto inline-flex items-center justify-center rounded-xl border-2 border-indigo-600 px-6 py-3 text-sm font-semibold text-indigo-600 hover:bg-indigo-50 transition-colors">
+                  Get Pro
                 </Link>
               </div>
             </div>

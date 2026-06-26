@@ -75,7 +75,7 @@ export default function Navbar({ isLoggedIn = false, user }: NavbarProps) {
                       />
                     ) : (
                       <div className="flex h-6 w-6 items-center justify-center rounded-full bg-indigo-100 text-indigo-600 text-xs font-semibold">
-                        {user?.name?.[0]?.toUpperCase() ?? 'U'}
+                        {user?.name?.[0]?.toUpperCase() ?? user?.email?.[0]?.toUpperCase() ?? 'U'}
                       </div>
                     )}
                     <span className="max-w-[120px] truncate">{user?.name ?? user?.email ?? 'Account'}</span>

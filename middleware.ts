@@ -30,7 +30,9 @@ export async function middleware(request: NextRequest) {
   // Protect app routes
   const isAppRoute = pathname.startsWith('/dashboard') ||
     pathname.startsWith('/onboarding') ||
-    pathname.startsWith('/interview')
+    pathname.startsWith('/interview') ||
+    pathname.startsWith('/subscription') ||
+    pathname.startsWith('/profile')
 
   if (isAppRoute && !user) {
     return NextResponse.redirect(new URL('/login', request.url))

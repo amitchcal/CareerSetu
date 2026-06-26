@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter, useParams } from 'next/navigation'
-import { Mic, MicOff, Loader2, Volume2, CheckCircle2, ChevronRight } from 'lucide-react'
+import { Mic, MicOff, Loader2, Volume2, CheckCircle2, ChevronRight, X } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { toast } from '@/hooks/useToast'
 import Navbar from '@/components/shared/Navbar'
@@ -147,6 +147,13 @@ export default function InterviewSessionPage() {
   const numQ = sessionMeta?.numQuestions ?? 1
   const progress = Math.round(((questionNumber - 1) / numQ) * 100)
 
+  async function handleEndEarly() {
+    window.speechSynthesis.cancel()
+    streamRef.current?.getTracks().forEach(t => t.stop())
+    await supabase.from('sessions').update({ status: 'abandoned' }).eq('id', sessionId)
+    router.push('/dashboard')
+  }
+
   return (
     <>
       <Navbar isLoggedIn />
@@ -160,9 +167,20 @@ export default function InterviewSessionPage() {
               Question {questionNumber} <span className="text-gray-400 font-normal">of {numQ}</span>
             </h1>
           </div>
-          <span className="text-xs font-semibold text-indigo-600 bg-indigo-50 rounded-full px-3 py-1">
-            {phase === 'loading' ? 'Loading…' : phase === 'speaking' ? 'AI Speaking' : phase === 'listening' ? 'Your turn' : phase === 'processing' ? 'Processing…' : 'Done'}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold text-indigo-600 bg-indigo-50 rounded-full px-3 py-1">
+              {phase === 'loading' ? 'Loading…' : phase === 'speaking' ? 'AI Speaking' : phase === 'listening' ? 'Your turn' : phase === 'processing' ? 'Processing…' : 'Done'}
+            </span>
+            {phase !== 'complete' && phase !== 'loading' && (
+              <button
+                onClick={handleEndEarly}
+                title="End interview"
+                className="rounded-full p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-500 transition-colors"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Progress bar */}
