@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createSupabaseServerClient } from '@/lib/supabase-server'
+import { supabaseAdmin } from '@/lib/supabase'
 import { anthropic } from '@/lib/anthropic'
 
 export async function POST(req: NextRequest, { params }: { params: { sessionId: string } }) {
@@ -13,7 +13,7 @@ export async function POST(req: NextRequest, { params }: { params: { sessionId: 
       return NextResponse.json({ error: 'Missing questionNumber or audio.' }, { status: 400 })
     }
 
-    const supabase = createSupabaseServerClient()
+    const supabase = supabaseAdmin
 
     // Fetch session to get context
     const { data: session, error: sessErr } = await supabase

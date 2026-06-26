@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createSupabaseServerClient } from '@/lib/supabase-server'
+import { supabaseAdmin } from '@/lib/supabase'
 import { anthropic } from '@/lib/anthropic'
 
 export async function POST(req: NextRequest, { params }: { params: { sessionId: string } }) {
   try {
     const { sessionId } = params
-    const supabase = createSupabaseServerClient()
+    const supabase = supabaseAdmin
 
     const { data: session } = await supabase
       .from('sessions')

@@ -14,17 +14,42 @@ type Phase = 'loading' | 'speaking' | 'listening' | 'processing' | 'complete'
 interface SessionMeta {
   role: string
   numQuestions: number
+  language: string
 }
 
-function speakText(text: string): Promise<void> {
+function getIndianVoice(lang: 'en-IN' | 'hi-IN'): SpeechSynthesisVoice | null {
+  const voices = window.speechSynthesis.getVoices()
+  // Prefer exact lang match, then name contains India/Hindi, then any match on base lang
+  return (
+    voices.find(v => v.lang === lang) ??
+    voices.find(v => v.lang.startsWith(lang.split('-')[0]) && (v.name.includes('India') || v.name.includes('Hindi'))) ??
+    voices.find(v => v.lang.startsWith(lang.split('-')[0])) ??
+    null
+  )
+}
+
+function speakText(text: string, sessionLang = 'english'): Promise<void> {
   return new Promise((resolve) => {
     window.speechSynthesis.cancel()
     const utterance = new SpeechSynthesisUtterance(text)
-    utterance.lang = 'en-IN'
+    const targetLang: 'en-IN' | 'hi-IN' = sessionLang === 'hindi' ? 'hi-IN' : 'en-IN'
+    utterance.lang = targetLang
     utterance.rate = 0.92
-    utterance.onend = () => resolve()
-    utterance.onerror = () => resolve()
-    window.speechSynthesis.speak(utterance)
+
+    const trySpeak = () => {
+      const voice = getIndianVoice(targetLang)
+      if (voice) utterance.voice = voice
+      utterance.onend = () => resolve()
+      utterance.onerror = () => resolve()
+      window.speechSynthesis.speak(utterance)
+    }
+
+    // Voices may not be loaded yet on first call
+    if (window.speechSynthesis.getVoices().length > 0) {
+      trySpeak()
+    } else {
+      window.speechSynthesis.onvoiceschanged = () => { trySpeak() }
+    }
   })
 }
 
@@ -51,12 +76,12 @@ export default function InterviewSessionPage() {
 
       const { data: sess } = await supabase
         .from('sessions')
-        .select('role, num_questions')
+        .select('role, num_questions, language')
         .eq('id', sessionId)
         .single()
 
       if (!sess) { router.replace('/dashboard'); return }
-      setSessionMeta({ role: sess.role, numQuestions: sess.num_questions })
+      setSessionMeta({ role: sess.role, numQuestions: sess.num_questions, language: sess.language })
 
       // Try sessionStorage first (set by interview/new page), fall back to DB
       let firstQuestionText = sessionStorage.getItem(`interview_q1_${sessionId}`)
@@ -76,7 +101,7 @@ export default function InterviewSessionPage() {
 
       setCurrentQuestion(firstQuestionText)
       setPhase('speaking')
-      await speakText(q1.question_text)
+      await speakText(firstQuestionText, sess.language)
       setPhase('listening')
       await startRecording()
     }
@@ -140,7 +165,7 @@ export default function InterviewSessionPage() {
       setCurrentQuestion(nextQ)
       setTranscript('')
       setPhase('speaking')
-      await speakText(nextQ)
+      await speakText(nextQ, sessionMeta?.language)
       setPhase('listening')
       await startRecording()
     } catch (err: unknown) {

@@ -1,5 +1,5 @@
 ﻿import { NextRequest, NextResponse } from 'next/server'
-import { createSupabaseServerClient } from '@/lib/supabase-server'
+import { supabaseAdmin } from '@/lib/supabase'
 import { anthropic } from '@/lib/anthropic'
 
 export async function POST(req: NextRequest) {
@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields.' }, { status: 400 })
     }
 
-    const supabase = createSupabaseServerClient()
+    const supabase = supabaseAdmin
 
     // Create session row
     const { data: session, error: sessionErr } = await supabase
@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
 
     if (sessionErr || !session) {
       console.error('[interview/start] session insert:', sessionErr)
-      return NextResponse.json({ error: 'Could not create session.' }, { status: 500 })
+      return NextResponse.json({ error: 'Could not create session.', detail: sessionErr?.message, code: sessionErr?.code }, { status: 500 })
     }
 
     const sessionId = session.id
