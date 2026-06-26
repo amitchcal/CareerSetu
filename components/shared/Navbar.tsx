@@ -66,9 +66,11 @@ export default function Navbar({ isLoggedIn = false, user }: NavbarProps) {
                 <DropdownMenuTrigger asChild>
                   <button className="flex items-center gap-2 rounded-full border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
                     {user?.avatarUrl ? (
-                      <img
+                      <Image
                         src={user.avatarUrl}
                         alt={user.name ?? 'User'}
+                        width={24}
+                        height={24}
                         className="h-6 w-6 rounded-full object-cover"
                       />
                     ) : (
