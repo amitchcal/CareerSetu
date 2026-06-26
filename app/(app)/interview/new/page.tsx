@@ -117,6 +117,8 @@ export default function InterviewNewPage() {
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error ?? 'Could not start interview.')
+      // Store first question so session page doesn't depend on DB re-fetch timing
+      sessionStorage.setItem(`interview_q1_${data.sessionId}`, data.firstQuestion)
       router.push(`/interview/${data.sessionId}`)
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Something went wrong.'

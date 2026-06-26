@@ -58,16 +58,23 @@ export default function InterviewSessionPage() {
       if (!sess) { router.replace('/dashboard'); return }
       setSessionMeta({ role: sess.role, numQuestions: sess.num_questions })
 
-      const { data: q1 } = await supabase
-        .from('session_questions')
-        .select('question_text')
-        .eq('session_id', sessionId)
-        .eq('question_number', 1)
-        .single()
+      // Try sessionStorage first (set by interview/new page), fall back to DB
+      let firstQuestionText = sessionStorage.getItem(`interview_q1_${sessionId}`)
+      sessionStorage.removeItem(`interview_q1_${sessionId}`)
 
-      if (!q1) { toast({ title: 'Error', description: 'Could not load first question.', variant: 'destructive' }); return }
+      if (!firstQuestionText) {
+        const { data: q1 } = await supabase
+          .from('session_questions')
+          .select('question_text')
+          .eq('session_id', sessionId)
+          .eq('question_number', 1)
+          .single()
+        firstQuestionText = q1?.question_text ?? null
+      }
 
-      setCurrentQuestion(q1.question_text)
+      if (!firstQuestionText) { toast({ title: 'Error', description: 'Could not load first question.', variant: 'destructive' }); return }
+
+      setCurrentQuestion(firstQuestionText)
       setPhase('speaking')
       await speakText(q1.question_text)
       setPhase('listening')
