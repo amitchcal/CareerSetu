@@ -59,12 +59,13 @@ export default function ProfilePage() {
     setSaving(true)
     try {
       const finalRole = roleValue === 'other' ? customRole.trim() : roleLabel
-      const { error } = await supabase.from('users').update({
+      const { error } = await supabase.from('users').upsert({
+        id: userId,
         name: name.trim(),
         target_role: finalRole || null,
         experience_level: difficulty,
         preferred_language: language,
-      }).eq('id', userId)
+      }, { onConflict: 'id' })
       if (error) throw error
       toast({ title: 'Profile saved', description: 'Your changes have been updated.' })
     } catch (err: unknown) {

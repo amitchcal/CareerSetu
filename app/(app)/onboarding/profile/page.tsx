@@ -99,13 +99,13 @@ export default function OnboardingProfilePage() {
     try {
       const { error } = await supabase
         .from('users')
-        .update({
+        .upsert({
+          id: userId,
           name: name.trim(),
           target_role: targetRole,
           experience_level: experience,
           preferred_language: language,
-        })
-        .eq('id', userId)
+        }, { onConflict: 'id' })
 
       if (error) throw error
       router.push('/onboarding/goal')
