@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Menu, X, Briefcase, ChevronDown, User, CreditCard, LogOut, LayoutDashboard } from 'lucide-react'
@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
+import { supabase } from '@/lib/supabase'
 
 interface NavbarProps {
   isLoggedIn?: boolean
@@ -23,8 +24,22 @@ interface NavbarProps {
   }
 }
 
-export default function Navbar({ isLoggedIn = false, user }: NavbarProps) {
+export default function Navbar({ isLoggedIn = false, user: userProp }: NavbarProps) {
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [user, setUser] = useState(userProp)
+
+  useEffect(() => {
+    if (userProp) { setUser(userProp); return }
+    if (!isLoggedIn) return
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) return
+      setUser({
+        name: session.user.user_metadata?.full_name ?? undefined,
+        email: session.user.email ?? undefined,
+        avatarUrl: session.user.user_metadata?.avatar_url ?? undefined,
+      })
+    })
+  }, [isLoggedIn, userProp])
 
   const navLinks = isLoggedIn
     ? [{ href: '/dashboard', label: 'Dashboard', icon: <LayoutDashboard className="h-4 w-4" /> }]

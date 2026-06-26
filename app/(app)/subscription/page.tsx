@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation'
 import { Loader2, CheckCircle2, AlertCircle, X, Check } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { toast } from '@/hooks/useToast'
+import Navbar from '@/components/shared/Navbar'
 
 // ─── Plan config (mirrors /pricing) ───────────────────────────────────────────
 
@@ -14,7 +15,7 @@ const PLANS = [
   {
     id: 'free',
     name: 'Free',
-    price: 'Rs.0',
+    price: '₹0',
     period: null,
     desc: 'Get started with no commitment',
     features: ['1 interview / week', '1 role category', 'English only', 'Basic feedback'],
@@ -23,7 +24,7 @@ const PLANS = [
   {
     id: 'starter',
     name: 'Starter',
-    price: 'Rs.199',
+    price: '₹199',
     period: '/month',
     desc: 'For consistent daily practice',
     features: ['Unlimited interviews', '3-5 role categories', 'English + Hindi', 'Full feedback'],
@@ -32,7 +33,7 @@ const PLANS = [
   {
     id: 'pro',
     name: 'Pro',
-    price: 'Rs.499',
+    price: '₹499',
     period: '/month',
     desc: 'For serious interview prep',
     features: ['Unlimited interviews', 'All roles', 'English, Hindi, Hinglish', 'Full + company-style simulation'],
@@ -42,7 +43,7 @@ const PLANS = [
   {
     id: 'pay_per',
     name: 'Pay-per-session',
-    price: 'Rs.49-99',
+    price: '₹49–99',
     period: '/session',
     desc: 'Pay only when you need it',
     features: ['1 session', 'All roles', 'Selected language', 'Full feedback'],
@@ -104,6 +105,7 @@ export default function SubscriptionPage() {
       supabase.from('subscriptions').select('plan, status, renewal_date, created_at').eq('user_id', userId).maybeSingle(),
       supabase.from('sessions').select('id', { count: 'exact', head: true })
         .eq('user_id', userId)
+        .eq('status', 'completed')
         .gte('created_at', weekAgo.toISOString()),
     ])
 
@@ -224,9 +226,12 @@ export default function SubscriptionPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-indigo-600" />
-      </div>
+      <>
+        <Navbar isLoggedIn />
+        <div className="flex min-h-[60vh] items-center justify-center">
+          <Loader2 className="h-6 w-6 animate-spin text-indigo-600" />
+        </div>
+      </>
     )
   }
 
@@ -236,6 +241,7 @@ export default function SubscriptionPage() {
 
   return (
     <>
+      <Navbar isLoggedIn user={{ name: data!.userName ?? undefined, email: data!.userEmail ?? undefined }} />
       {/* Cancel confirmation dialog */}
       {showCancel && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
