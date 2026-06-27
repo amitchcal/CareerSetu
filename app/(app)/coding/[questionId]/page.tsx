@@ -114,7 +114,7 @@ export default function CodingSolvePage() {
         {/* Problem statement */}
         <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
           <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600 capitalize">{question.difficulty}</span>
-          <pre className="mt-3 whitespace-pre-wrap font-sans text-sm text-gray-800 leading-relaxed">{question.question_text}</pre>
+          <pre className="mt-3 whitespace-pre-wrap break-words font-sans text-sm text-gray-800 leading-relaxed">{question.question_text}</pre>
         </div>
 
         {/* Editor */}
@@ -161,8 +161,8 @@ export default function CodingSolvePage() {
                   </div>
                   {!r.passed && (
                     <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2 font-mono text-xs">
-                      <div><span className="text-gray-400">Expected:</span><pre className="mt-0.5 whitespace-pre-wrap rounded bg-white px-2 py-1 text-gray-700">{r.expected || '—'}</pre></div>
-                      <div><span className="text-gray-400">Got:</span><pre className="mt-0.5 whitespace-pre-wrap rounded bg-white px-2 py-1 text-gray-700">{r.stderr ? `⚠ ${r.stderr}` : (r.stdout || '—')}</pre></div>
+                      <div className="min-w-0"><span className="text-gray-400">Expected:</span><pre className="mt-0.5 whitespace-pre-wrap break-words rounded bg-white px-2 py-1 text-gray-700">{r.expected || '—'}</pre></div>
+                      <div className="min-w-0"><span className="text-gray-400">Got:</span><pre className="mt-0.5 whitespace-pre-wrap break-words rounded bg-white px-2 py-1 text-gray-700">{r.stderr ? `⚠ ${r.stderr}` : (r.stdout || '—')}</pre></div>
                     </div>
                   )}
                 </div>

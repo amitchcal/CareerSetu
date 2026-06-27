@@ -406,8 +406,8 @@ export default function SubscriptionPage() {
           <h2 className="text-sm font-semibold text-gray-700 mb-3">Billing history</h2>
           {/* TODO: For full invoice history, integrate Razorpay webhook to store payment events
               in a `payments` table and list them here. Currently shows only subscription start. */}
-          <div className="rounded-2xl border border-gray-200 bg-white overflow-hidden shadow-sm">
-            <table className="w-full text-sm">
+          <div className="rounded-2xl border border-gray-200 bg-white overflow-x-auto shadow-sm">
+            <table className="w-full min-w-[360px] text-sm">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500">Date</th>
