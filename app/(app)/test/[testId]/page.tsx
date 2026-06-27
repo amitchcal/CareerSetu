@@ -37,16 +37,29 @@ export default function TestRunnerPage() {
 
   const deadlineRef = useRef<number>(0)
   const submittedRef = useRef(false)
+  const timeSpentRef = useRef<Record<string, number>>({})
+  const segStartRef = useRef<number>(Date.now())
+  const curQidRef = useRef<string | null>(null)
+
+  const flushTime = useCallback(() => {
+    const qid = curQidRef.current
+    if (qid) {
+      const elapsed = Math.round((Date.now() - segStartRef.current) / 1000)
+      timeSpentRef.current[qid] = (timeSpentRef.current[qid] ?? 0) + elapsed
+    }
+    segStartRef.current = Date.now()
+  }, [])
 
   const submit = useCallback(async () => {
     if (submittedRef.current) return
     submittedRef.current = true
+    flushTime()
     setSubmitting(true)
     try {
       const res = await fetch(`/api/test/${testId}/submit`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ answers }),
+        body: JSON.stringify({ answers, timeSpent: timeSpentRef.current }),
       })
       if (!res.ok) throw new Error((await res.json()).error)
       router.replace(`/test/${testId}/result`)
@@ -55,7 +68,12 @@ export default function TestRunnerPage() {
       setSubmitting(false)
       toast({ title: 'Submit failed', description: err instanceof Error ? err.message : 'Try again.', variant: 'destructive' })
     }
-  }, [answers, testId, router])
+  }, [answers, testId, router, flushTime])
+
+  const goTo = useCallback((i: number) => {
+    flushTime()
+    setCurrent(i)
+  }, [flushTime])
 
   // Load test (sessionStorage first, DB fallback)
   useEffect(() => {
@@ -99,6 +117,16 @@ export default function TestRunnerPage() {
     init()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [testId])
+
+  // Keep the timer attributed to the currently-shown question
+  useEffect(() => {
+    if (questions[current]) curQidRef.current = questions[current].testQuestionId
+  }, [current, questions])
+
+  // Reset the per-question timer once the test is loaded
+  useEffect(() => {
+    if (!loading) segStartRef.current = Date.now()
+  }, [loading])
 
   // Countdown
   useEffect(() => {
@@ -157,7 +185,7 @@ export default function TestRunnerPage() {
               return (
                 <button
                   key={qq.testQuestionId}
-                  onClick={() => setCurrent(i)}
+                  onClick={() => goTo(i)}
                   className={`relative flex h-8 w-8 items-center justify-center rounded-lg text-xs font-semibold transition-colors ${
                     isCurrent ? 'ring-2 ring-indigo-500 ' : ''
                   }${isAnswered ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
@@ -198,7 +226,7 @@ export default function TestRunnerPage() {
         {/* Controls */}
         <div className="flex items-center justify-between gap-2">
           <button
-            onClick={() => setCurrent(c => Math.max(0, c - 1))}
+            onClick={() => goTo(Math.max(0, current - 1))}
             disabled={current === 0}
             className="flex items-center gap-1 rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-40"
           >
@@ -216,7 +244,7 @@ export default function TestRunnerPage() {
 
           {current < questions.length - 1 ? (
             <button
-              onClick={() => setCurrent(c => Math.min(questions.length - 1, c + 1))}
+              onClick={() => goTo(Math.min(questions.length - 1, current + 1))}
               className="flex items-center gap-1 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 transition-colors"
             >
               Next <ChevronRight className="h-4 w-4" />
