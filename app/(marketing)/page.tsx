@@ -119,17 +119,17 @@ export default function HomePage() {
 
             <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link
-                href="/signup"
+                href="/try"
                 className="w-full sm:w-auto inline-flex items-center justify-center rounded-xl bg-amber-500 px-8 py-4 text-base font-semibold text-white shadow-md hover:bg-amber-600 active:scale-[0.98] transition-all"
               >
-                Start Free Practice
+                Try a question — no signup
               </Link>
-              <a
-                href="#how-it-works"
+              <Link
+                href="/signup"
                 className="text-sm font-medium text-indigo-600 hover:text-indigo-700 underline underline-offset-4 transition-colors"
               >
-                See how it works
-              </a>
+                Or start free
+              </Link>
             </div>
           </div>
         </section>
