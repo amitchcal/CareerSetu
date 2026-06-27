@@ -25,6 +25,7 @@ export default function ProfilePage() {
   const [customRole, setCustomRole] = useState('')
   const [difficulty, setDifficulty] = useState<Difficulty>('fresher')
   const [language, setLanguage] = useState<Language>('english')
+  const [resumeText, setResumeText] = useState('')
 
   useEffect(() => {
     async function load() {
@@ -35,7 +36,7 @@ export default function ProfilePage() {
 
       const { data: user } = await supabase
         .from('users')
-        .select('name, target_role, experience_level, preferred_language')
+        .select('name, target_role, experience_level, preferred_language, resume_text')
         .eq('id', session.user.id)
         .maybeSingle()
 
@@ -48,6 +49,7 @@ export default function ProfilePage() {
         }
         if (user.experience_level) setDifficulty(user.experience_level as Difficulty)
         if (user.preferred_language) setLanguage(user.preferred_language as Language)
+        if (user.resume_text) setResumeText(user.resume_text)
       }
       setLoading(false)
     }
@@ -65,6 +67,7 @@ export default function ProfilePage() {
         target_role: finalRole || null,
         experience_level: difficulty,
         preferred_language: language,
+        resume_text: resumeText.trim() || null,
       }, { onConflict: 'id' })
       if (error) throw error
       toast({ title: 'Profile saved', description: 'Your changes have been updated.' })
@@ -162,6 +165,19 @@ export default function ProfilePage() {
                 </label>
               ))}
             </div>
+          </div>
+
+          {/* Résumé */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-medium text-gray-700">Résumé</label>
+            <textarea
+              rows={6}
+              value={resumeText}
+              onChange={e => setResumeText(e.target.value)}
+              placeholder="Paste your résumé text here. We use it to personalise experienced / lead mock interviews — probing your real projects and the gap with a target role."
+              className="rounded-xl border-2 border-gray-200 px-3.5 py-3 text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all resize-none"
+            />
+            <p className="text-xs text-gray-400">Optional. Only used for experienced / lead interviews; never shared.</p>
           </div>
         </div>
 

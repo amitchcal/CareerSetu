@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const {
       userId, trackId, companyId, roundType, seniority,
-      language, numQuestions, jobTitle, jobDescription,
+      language, numQuestions, jobTitle, jobDescription, resumeText,
     } = body
 
     if (!userId || !trackId || !seniority || !language || !numQuestions) {
@@ -39,9 +39,14 @@ export async function POST(req: NextRequest) {
     const difficulty = toDifficulty(seniority)
     const role = (jobTitle?.trim() || track.name) as string
 
+    // Résumé is passed from the client (read there with the user's own session) and
+    // snapshotted onto the session, so follow-up generation can reuse it server-side.
+    const resumeSnapshot = isSenior(seniority) && typeof resumeText === 'string' && resumeText.trim()
+      ? resumeText.trim() : null
+
     const context = buildInterviewContext({
       trackName: track.name, category: track.category, companyName, companyNotes,
-      roundType, seniority, jobTitle, jobDescription,
+      roundType, seniority, jobTitle, jobDescription, resumeText: resumeSnapshot,
     })
 
     // Create the session
@@ -51,6 +56,7 @@ export async function POST(req: NextRequest) {
         user_id: userId, role, difficulty, language, num_questions: numQuestions, status: 'in_progress',
         track_id: trackId, company_id: companyId ?? null, round_type: roundType ?? null,
         seniority, job_title: jobTitle?.trim() || null, job_description: jobDescription?.trim() || null,
+        resume_snapshot: resumeSnapshot,
       })
       .select('id')
       .single()

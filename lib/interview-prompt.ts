@@ -9,6 +9,7 @@ export interface InterviewContext {
   seniority?: string | null // 'fresher' | 'intermediate' | 'experienced' | 'lead'
   jobTitle?: string | null
   jobDescription?: string | null
+  resumeText?: string | null
 }
 
 const ROUND_FOCUS: Record<string, string> = {
@@ -39,6 +40,11 @@ export function buildInterviewContext(ctx: InterviewContext): string {
   if (isSenior(ctx.seniority) && ctx.jobDescription?.trim()) {
     lines.push(
       `Target role${ctx.jobTitle ? `: ${ctx.jobTitle}` : ''}. Tailor questions to the responsibilities, skills and seniority described in this job description:\n"""\n${ctx.jobDescription.trim()}\n"""`
+    )
+  }
+  if (isSenior(ctx.seniority) && ctx.resumeText?.trim()) {
+    lines.push(
+      `Candidate résumé. Personalise questions to their actual experience and probe the gap between what the role needs and what the candidate has done — reference their real projects and claims:\n"""\n${ctx.resumeText.trim()}\n"""`
     )
   }
   return lines.join('\n')

@@ -91,6 +91,7 @@ alter table sessions add column if not exists round_type text; -- 'technical' | 
 alter table sessions add column if not exists seniority text; -- 'fresher' | 'intermediate' | 'experienced' | 'lead'
 alter table sessions add column if not exists job_title text; -- experienced/lead: target role title
 alter table sessions add column if not exists job_description text; -- experienced/lead: JD text used to tailor questions
+alter table sessions add column if not exists resume_snapshot text; -- résumé captured at start, used to tailor senior interviews (P3.2)
 
 alter table session_feedback add column if not exists competency_scores jsonb; -- { "communication": 7, ... }
 

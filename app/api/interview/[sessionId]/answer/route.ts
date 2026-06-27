@@ -19,7 +19,7 @@ export async function POST(req: NextRequest, { params }: { params: { sessionId: 
     // Fetch session to get context
     const { data: session, error: sessErr } = await supabase
       .from('sessions')
-      .select('role, difficulty, language, num_questions, user_id, track_id, company_id, round_type, seniority, job_title, job_description, tracks(name, category), companies(name, interview_style_notes)')
+      .select('role, difficulty, language, num_questions, user_id, track_id, company_id, round_type, seniority, job_title, job_description, resume_snapshot, tracks(name, category), companies(name, interview_style_notes)')
       .eq('id', sessionId)
       .single()
 
@@ -83,18 +83,20 @@ export async function POST(req: NextRequest, { params }: { params: { sessionId: 
       .map(q => `Q${q.question_number}: ${q.question_text}\nA: ${q.transcript ?? '(no answer)'}`)
       .join('\n\n')
 
-    // Build grounding context from the session's track / company / round / seniority / JD
+    // Build grounding context from the session's track / company / round / seniority / JD / résumé
     const track = session.tracks as unknown as { name: string; category: string | null } | null
     const company = session.companies as unknown as { name: string; interview_style_notes: string | null } | null
+    const seniority = session.seniority ?? session.difficulty
     const context = buildInterviewContext({
       trackName: track?.name ?? session.role,
       category: track?.category,
       companyName: company?.name,
       companyNotes: company?.interview_style_notes,
       roundType: session.round_type,
-      seniority: session.seniority ?? session.difficulty,
+      seniority,
       jobTitle: session.job_title,
       jobDescription: session.job_description,
+      resumeText: session.resume_snapshot,
     })
 
     // Generate next question

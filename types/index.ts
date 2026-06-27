@@ -56,6 +56,7 @@ export interface Session {
   seniority: Seniority | null;
   job_title: string | null;
   job_description: string | null;
+  resume_snapshot: string | null;
   created_at: string;
 }
 

@@ -66,7 +66,10 @@ export default function InterviewNewPage() {
   const [jobTitle, setJobTitle] = useState('')
   const [jobDescription, setJobDescription] = useState('')
   const [jdError, setJdError] = useState('')
+  const [savedResume, setSavedResume] = useState('')
+  const [useResume, setUseResume] = useState(true)
   const [starting, setStarting] = useState(false)
+  const hasResume = savedResume.trim().length > 0
 
   const isSenior = seniority === 'experienced' || seniority === 'lead'
 
@@ -77,7 +80,7 @@ export default function InterviewNewPage() {
       setUserId(session.user.id)
 
       const [{ data: user }, { data: tk }, { data: co }] = await Promise.all([
-        supabase.from('users').select('experience_level, preferred_language').eq('id', session.user.id).maybeSingle(),
+        supabase.from('users').select('experience_level, preferred_language, resume_text').eq('id', session.user.id).maybeSingle(),
         supabase.from('tracks').select('id, name, parent_id, sort_order').eq('is_active', true).order('sort_order'),
         supabase.from('companies').select('id, name').order('sort_order'),
       ])
@@ -88,6 +91,7 @@ export default function InterviewNewPage() {
       if (user) {
         setSeniority(toSeniority(user.experience_level))
         if (user.preferred_language) setLanguage(user.preferred_language as Language)
+        if (user.resume_text) setSavedResume(user.resume_text)
       }
       setAuthLoading(false)
     }
@@ -112,6 +116,7 @@ export default function InterviewNewPage() {
           language, numQuestions,
           jobTitle: isSenior ? jobTitle.trim() : null,
           jobDescription: isSenior ? jobDescription.trim() : null,
+          resumeText: isSenior && useResume ? savedResume : null,
         }),
       })
       const data = await res.json()
@@ -210,6 +215,17 @@ export default function InterviewNewPage() {
                 className={`rounded-xl border-2 px-3.5 py-3 text-sm outline-none focus:border-indigo-500 resize-none ${jdError ? 'border-red-400' : 'border-gray-200'}`}
               />
               {jdError && <p className="text-xs text-red-600">{jdError}</p>}
+
+              {hasResume ? (
+                <label className="flex cursor-pointer items-center gap-2.5 rounded-lg bg-white border border-indigo-100 px-3 py-2.5">
+                  <input type="checkbox" checked={useResume} onChange={e => setUseResume(e.target.checked)} className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />
+                  <span className="text-sm text-gray-700">Use my saved résumé to personalise questions</span>
+                </label>
+              ) : (
+                <p className="text-xs text-gray-500">
+                  Tip: add your résumé in <a href="/profile" className="font-medium text-indigo-600 hover:underline">Profile</a> to get questions tailored to your real experience.
+                </p>
+              )}
             </div>
           )}
 
