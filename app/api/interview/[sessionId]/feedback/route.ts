@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { anthropic } from '@/lib/anthropic'
+import { pickCompetencies, COMPETENCY_LABELS } from '@/lib/competencies'
 
 export async function POST(req: NextRequest, { params }: { params: { sessionId: string } }) {
   try {
@@ -9,7 +10,7 @@ export async function POST(req: NextRequest, { params }: { params: { sessionId: 
 
     const { data: session } = await supabase
       .from('sessions')
-      .select('role, difficulty')
+      .select('role, difficulty, seniority, round_type, tracks(category)')
       .eq('id', sessionId)
       .single()
 
@@ -27,33 +28,38 @@ export async function POST(req: NextRequest, { params }: { params: { sessionId: 
       .map(q => `Q${q.question_number}: ${q.question_text}\nAnswer: ${q.transcript ?? '(no answer recorded)'}`)
       .join('\n\n')
 
+    const category = (session.tracks as unknown as { category: string | null } | null)?.category ?? null
+    const seniority = session.seniority ?? session.difficulty
+    const competencyKeys = pickCompetencies({ category, roundType: session.round_type, seniority })
+    const competencyList = competencyKeys.map(k => `- "${k}": ${COMPETENCY_LABELS[k] ?? k}`).join('\n')
+
     const msg = await anthropic.messages.create({
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 1500,
+      max_tokens: 1800,
       messages: [
         {
           role: 'user',
           content: `You are an experienced, honest hiring manager evaluating a candidate's mock interview practice session.
-Do NOT default to generic praise. Be specific and calibrated — point out real issues even if minor.
+Do NOT default to generic praise. Be specific and calibrated — point out real issues even if minor. A typical practice answer is a 5–7, not a 9.
 
 Role being interviewed for: ${session.role}
-Experience level: ${session.difficulty}
+Seniority: ${seniority}
+${session.round_type ? `Round type: ${session.round_type}` : ''}
 
 Transcript of all Q&A:
 ${formatted_qa_pairs}
 
-Evaluate using this rubric:
-- Structure: Did answers follow a clear structure (e.g. STAR for behavioral questions)?
-- Relevance: Did the answer actually address what was asked?
-- Clarity: Was the answer concise and easy to follow, or rambling?
-- Filler words / hedging: Note if present (e.g. "um", "like", excessive qualifiers).
-- Confidence signals: Based on word choice, did the candidate sound confident or uncertain?
+Score the candidate on EXACTLY these competencies (integer 0-10 each, calibrated and honest):
+${competencyList}
+
+Also give an overall score (1-10), what went well, what to improve, and concise per-question feedback.
 
 Return ONLY valid JSON in this exact shape, no markdown, no preamble:
 {
   "overallScore": <integer 1-10>,
-  "strengths": ["...", "..."],
-  "weaknesses": ["...", "..."],
+  "competencyScores": { ${competencyKeys.map(k => `"${k}": <0-10>`).join(', ')} },
+  "whatWentWell": ["...", "..."],
+  "whatToImprove": ["...", "..."],
   "perQuestionFeedback": [
     {"questionNumber": 1, "feedback": "..."}
   ]
@@ -63,20 +69,30 @@ Return ONLY valid JSON in this exact shape, no markdown, no preamble:
     })
 
     const raw = msg.content[0].type === 'text' ? msg.content[0].text.trim() : ''
-    const parsed = JSON.parse(raw)
+    const jsonText = raw.replace(/^```(?:json)?/i, '').replace(/```$/i, '').trim()
+    const parsed = JSON.parse(jsonText)
+
+    // Keep only the expected competency keys, clamp to 0-10
+    const competencyScores: Record<string, number> = {}
+    for (const k of competencyKeys) {
+      const v = Number(parsed.competencyScores?.[k])
+      if (Number.isFinite(v)) competencyScores[k] = Math.max(0, Math.min(10, Math.round(v)))
+    }
 
     await supabase.from('session_feedback').upsert({
       session_id: sessionId,
       overall_score: parsed.overallScore,
-      strengths: parsed.strengths,
-      weaknesses: parsed.weaknesses,
+      strengths: parsed.whatWentWell,
+      weaknesses: parsed.whatToImprove,
       per_question_feedback: parsed.perQuestionFeedback,
+      competency_scores: competencyScores,
     }, { onConflict: 'session_id' })
 
     return NextResponse.json({
       overallScore: parsed.overallScore,
-      strengths: parsed.strengths,
-      weaknesses: parsed.weaknesses,
+      competencyScores,
+      strengths: parsed.whatWentWell,
+      weaknesses: parsed.whatToImprove,
       perQuestionFeedback: parsed.perQuestionFeedback,
     })
   } catch (err: unknown) {
