@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Menu, X, Briefcase, ChevronDown, User, CreditCard, LogOut, LayoutDashboard } from 'lucide-react'
+import { Menu, X, Briefcase, ChevronDown, User, CreditCard, LogOut, LayoutDashboard, Dumbbell, Library, BarChart3 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -42,7 +42,12 @@ export default function Navbar({ isLoggedIn = false, user: userProp }: NavbarPro
   }, [isLoggedIn, userProp])
 
   const navLinks = isLoggedIn
-    ? [{ href: '/dashboard', label: 'Dashboard', icon: <LayoutDashboard className="h-4 w-4" /> }]
+    ? [
+        { href: '/dashboard', label: 'Dashboard', icon: <LayoutDashboard className="h-4 w-4" /> },
+        { href: '/practice', label: 'Practice', icon: <Dumbbell className="h-4 w-4" /> },
+        { href: '/question-bank', label: 'Question bank', icon: <Library className="h-4 w-4" /> },
+        { href: '/reports', label: 'Reports', icon: <BarChart3 className="h-4 w-4" /> },
+      ]
     : [
         { href: '/#how-it-works', label: 'How it works' },
         { href: '/pricing', label: 'Pricing' },

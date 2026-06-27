@@ -151,15 +151,15 @@ export default function DashboardPage() {
               <Mic className="h-5 w-5 text-white" />
             </div>
             <div>
-              <p className="font-semibold text-white">Start Mock Interview</p>
-              <p className="text-xs text-indigo-200">AI-powered, real questions, honest feedback</p>
+              <p className="font-semibold text-white">Ready to practise?</p>
+              <p className="text-xs text-indigo-200">Mock interviews, MCQ tests and coding — all in one place</p>
             </div>
           </div>
           <Link
-            href="/interview/new"
+            href="/practice"
             className="flex w-full items-center justify-center gap-2 rounded-xl bg-amber-500 py-3.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-amber-600 active:scale-[0.98]"
           >
-            Start Mock Interview
+            Start practising
             <ChevronRight className="h-4 w-4" />
           </Link>
         </div>

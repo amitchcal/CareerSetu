@@ -31,6 +31,10 @@ export async function middleware(request: NextRequest) {
   const isAppRoute = pathname.startsWith('/dashboard') ||
     pathname.startsWith('/onboarding') ||
     pathname.startsWith('/interview') ||
+    pathname.startsWith('/practice') ||
+    pathname.startsWith('/question-bank') ||
+    pathname.startsWith('/reports') ||
+    pathname.startsWith('/test') ||
     pathname.startsWith('/subscription') ||
     pathname.startsWith('/profile')
 
