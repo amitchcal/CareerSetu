@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { anthropic } from '@/lib/anthropic'
 import { buildInterviewContext } from '@/lib/interview-prompt'
+import { computeDeliveryMetrics } from '@/lib/delivery'
 
 export async function POST(req: NextRequest, { params }: { params: { sessionId: string } }) {
   try {
@@ -41,10 +42,11 @@ export async function POST(req: NextRequest, { params }: { params: { sessionId: 
       audioResponseUrl = urlData.publicUrl
     }
 
-    // Transcribe via Deepgram
+    // Transcribe via Deepgram (filler_words=true keeps disfluencies for delivery metrics)
     let transcript = ''
+    let audioDuration: number | null = null
     try {
-      const dgRes = await fetch('https://api.deepgram.com/v1/listen?model=nova-2&language=en-IN&smart_format=true', {
+      const dgRes = await fetch('https://api.deepgram.com/v1/listen?model=nova-2&language=en-IN&smart_format=true&filler_words=true', {
         method: 'POST',
         headers: {
           Authorization: `Token ${process.env.DEEPGRAM_API_KEY}`,
@@ -54,14 +56,25 @@ export async function POST(req: NextRequest, { params }: { params: { sessionId: 
       })
       const dgJson = await dgRes.json()
       transcript = dgJson?.results?.channels?.[0]?.alternatives?.[0]?.transcript ?? ''
+      audioDuration = typeof dgJson?.metadata?.duration === 'number' ? dgJson.metadata.duration : null
     } catch (e) {
       console.error('[answer] Deepgram error:', e)
     }
 
-    // Update question row with transcript and audio URL
+    // Measured delivery metrics (WPM, filler counts) from the transcript + duration
+    const metrics = computeDeliveryMetrics(transcript, audioDuration)
+
+    // Update question row with transcript, audio URL and delivery metrics
     await supabase
       .from('session_questions')
-      .update({ transcript, audio_response_url: audioResponseUrl })
+      .update({
+        transcript,
+        audio_response_url: audioResponseUrl,
+        answer_duration_seconds: metrics.durationSeconds,
+        words_per_minute: metrics.wpm,
+        filler_count: metrics.fillerCount,
+        filler_words: metrics.fillerWords,
+      })
       .eq('session_id', sessionId)
       .eq('question_number', questionNumber)
 

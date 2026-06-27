@@ -5,11 +5,18 @@ export const dynamic = 'force-dynamic'
 import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
-import { Loader2, TrendingUp, TrendingDown, MessageSquare, ChevronRight, Download } from 'lucide-react'
+import { Loader2, TrendingUp, TrendingDown, MessageSquare, ChevronRight, Download, Gauge, AudioLines } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import Navbar from '@/components/shared/Navbar'
 import RadarChart, { RadarDatum } from '@/components/shared/RadarChart'
 import { COMPETENCY_LABELS } from '@/lib/competencies'
+import { pace } from '@/lib/delivery'
+
+interface Delivery {
+  avgWpm: number | null
+  totalFillers: number
+  breakdown: [string, number][]
+}
 
 interface Feedback {
   overallScore: number
@@ -38,6 +45,7 @@ export default function FeedbackPage() {
 
   const [feedback, setFeedback] = useState<Feedback | null>(null)
   const [role, setRole] = useState<string>('')
+  const [delivery, setDelivery] = useState<Delivery | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -46,11 +54,31 @@ export default function FeedbackPage() {
       const { data: { session: authSession } } = await supabase.auth.getSession()
       if (!authSession) { router.replace('/login'); return }
 
-      const [{ data: sess }, { data: fb }] = await Promise.all([
+      const [{ data: sess }, { data: fb }, { data: sq }] = await Promise.all([
         supabase.from('sessions').select('role').eq('id', sessionId).single(),
         supabase.from('session_feedback').select(SELECT).eq('session_id', sessionId).maybeSingle(),
+        supabase.from('session_questions').select('words_per_minute, filler_count, filler_words').eq('session_id', sessionId),
       ])
       if (sess) setRole(sess.role)
+
+      // Aggregate measured delivery metrics across answered questions
+      const rows = sq ?? []
+      const wpms = rows.map(r => r.words_per_minute as number | null).filter((n): n is number => typeof n === 'number' && n > 0)
+      const combined: Record<string, number> = {}
+      let totalFillers = 0
+      for (const r of rows) {
+        totalFillers += (r.filler_count as number) ?? 0
+        const fw = (r.filler_words as Record<string, number> | null) ?? {}
+        for (const [k, v] of Object.entries(fw)) combined[k] = (combined[k] ?? 0) + v
+      }
+      const breakdown = Object.entries(combined).sort((a, b) => b[1] - a[1]).slice(0, 5)
+      if (wpms.length || totalFillers > 0) {
+        setDelivery({
+          avgWpm: wpms.length ? Math.round(wpms.reduce((a, b) => a + b, 0) / wpms.length) : null,
+          totalFillers,
+          breakdown,
+        })
+      }
 
       if (fb) {
         setFeedback(mapFeedback(fb))
@@ -137,6 +165,38 @@ export default function FeedbackPage() {
               <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
                 <h2 className="text-sm font-bold text-gray-800 mb-2">Competency breakdown</h2>
                 <RadarChart data={radarData} />
+              </div>
+            )}
+
+            {/* Measured delivery metrics */}
+            {delivery && (
+              <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+                <div className="flex items-center gap-2 mb-3">
+                  <AudioLines className="h-4 w-4 text-indigo-500" />
+                  <h2 className="text-sm font-bold text-gray-800">Delivery (measured)</h2>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="rounded-xl bg-gray-50 px-4 py-3">
+                    <div className="flex items-center gap-1.5 text-xs text-gray-400 mb-1"><Gauge className="h-3.5 w-3.5" /> Speaking pace</div>
+                    {delivery.avgWpm != null ? (
+                      <>
+                        <p className="text-2xl font-bold text-gray-900">{delivery.avgWpm} <span className="text-sm font-normal text-gray-400">wpm</span></p>
+                        {(() => {
+                          const p = pace(delivery.avgWpm)
+                          const map = { slow: ['Bit slow', 'text-amber-600'], good: ['Good pace', 'text-green-600'], fast: ['Bit fast', 'text-amber-600'] } as const
+                          return p ? <p className={`text-xs font-medium ${map[p][1]}`}>{map[p][0]} · aim 110–160</p> : null
+                        })()}
+                      </>
+                    ) : <p className="text-sm text-gray-400">Not available</p>}
+                  </div>
+                  <div className="rounded-xl bg-gray-50 px-4 py-3">
+                    <div className="flex items-center gap-1.5 text-xs text-gray-400 mb-1"><MessageSquare className="h-3.5 w-3.5" /> Filler words</div>
+                    <p className="text-2xl font-bold text-gray-900">{delivery.totalFillers}</p>
+                    {delivery.breakdown.length > 0 && (
+                      <p className="text-xs text-gray-500 truncate">{delivery.breakdown.map(([w, n]) => `${w} ×${n}`).join(', ')}</p>
+                    )}
+                  </div>
+                </div>
               </div>
             )}
 
