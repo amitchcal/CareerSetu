@@ -31,8 +31,8 @@ const MODES: PracticeMode[] = [
     title: 'MCQ test',
     description: 'Time-bound multiple-choice test, auto-graded with a topic-wise breakdown.',
     icon: <ListChecks className="h-5 w-5" />,
-    href: null,
-    accent: 'border-gray-200',
+    href: '/test/new',
+    accent: 'border-amber-200 hover:border-amber-400',
     iconBg: 'bg-amber-100 text-amber-600',
   },
   {
