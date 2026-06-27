@@ -40,8 +40,8 @@ const MODES: PracticeMode[] = [
     title: 'Coding assessment',
     description: 'Solve problems in an in-browser editor — write, run and get evaluated.',
     icon: <Code2 className="h-5 w-5" />,
-    href: null,
-    accent: 'border-gray-200',
+    href: '/coding',
+    accent: 'border-teal-200 hover:border-teal-400',
     iconBg: 'bg-teal-100 text-teal-600',
   },
 ]

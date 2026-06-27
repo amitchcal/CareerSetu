@@ -35,6 +35,7 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith('/question-bank') ||
     pathname.startsWith('/reports') ||
     pathname.startsWith('/test') ||
+    pathname.startsWith('/coding') ||
     pathname.startsWith('/admin') ||
     pathname.startsWith('/subscription') ||
     pathname.startsWith('/profile')
