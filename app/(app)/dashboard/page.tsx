@@ -51,7 +51,7 @@ export default function DashboardPage() {
       ] = await Promise.all([
         supabase.from('users').select('name, email, target_role').eq('id', userId).maybeSingle(),
         supabase.from('sessions')
-          .select('id, role, status, created_at, session_feedback(overall_score)')
+          .select('id, role, status, created_at')
           .eq('user_id', userId)
           .eq('status', 'completed')
           .order('created_at', { ascending: false }),
@@ -59,15 +59,21 @@ export default function DashboardPage() {
       ])
 
       const completed = sessions ?? []
+
+      // Fetch feedback scores separately (PostgREST nested embeds don't resolve reliably here)
+      const sessionIds = completed.map(s => s.id)
+      const { data: feedbackRows } = sessionIds.length
+        ? await supabase.from('session_feedback').select('session_id, overall_score').in('session_id', sessionIds)
+        : { data: [] as { session_id: string; overall_score: number | null }[] }
+      const scoreBySession = new Map((feedbackRows ?? []).map(f => [f.session_id, f.overall_score]))
+
       const scores = completed
-        .map(s => (s.session_feedback as { overall_score: number | null }[] | null)?.[0]?.overall_score)
+        .map(s => scoreBySession.get(s.id))
         .filter((s): s is number => s != null)
       const avgScore = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : null
 
       const recent = completed[0] ?? null
-      const recentScore = recent
-        ? ((recent.session_feedback as { overall_score: number | null }[] | null)?.[0]?.overall_score ?? null)
-        : null
+      const recentScore = recent ? (scoreBySession.get(recent.id) ?? null) : null
 
       setData({
         name: user?.name ?? null,
