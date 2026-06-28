@@ -31,7 +31,8 @@ function ApplyToResume({ summary, bullets, role }: { summary: string; bullets: s
   const [saved, setSaved] = useState('')
 
   useEffect(() => {
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: authData }) => {
+      const session = authData.session
       if (!session) return
       const res = await fetch(`/api/resume?userId=${session.user.id}`)
       const data = await res.json()

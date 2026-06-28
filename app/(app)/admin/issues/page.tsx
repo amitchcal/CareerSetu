@@ -55,7 +55,8 @@ export default function AdminIssuesPage() {
   const [token, setToken] = useState('')
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data }) => {
+      const session = data.session
       const email = session?.user?.email?.toLowerCase() ?? ''
       if (!session || !ADMIN_EMAILS.includes(email)) {
         setAuthChecked(true)

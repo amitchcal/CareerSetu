@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 export const dynamic = 'force-dynamic'
 
@@ -42,7 +42,8 @@ export default function JobsPage() {
   const [profileSkills, setProfileSkills] = useState<string[]>([])
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data }) => {
+      const session = data.session
       if (!session) { router.replace('/login'); return }
       setUserId(session.user.id)
       supabase

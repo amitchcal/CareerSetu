@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -25,7 +25,8 @@ export default function ResumeBuilderPage() {
   const [creating, setCreating] = useState(false)
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data }) => {
+      const session = data.session
       if (!session) { router.replace('/login'); return }
       setUserId(session.user.id)
       fetchResumes(session.user.id)

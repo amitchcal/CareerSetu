@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 export const dynamic = 'force-dynamic'
 
@@ -53,7 +53,8 @@ export default function AdminQuestionsPage() {
   const [busyId, setBusyId] = useState<string | null>(null)
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data }) => {
+      const session = data.session
       if (!session) { router.replace('/login'); return }
       setIsAdmin(ADMIN_EMAILS.includes((session.user.email ?? '').toLowerCase()))
       setAuthChecked(true)

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 export const dynamic = 'force-dynamic'
 
@@ -45,7 +45,8 @@ export default function OnboardingProfilePage() {
 
   // Auth check
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data }) => {
+      const session = data.session
       if (!session) {
         router.replace('/login')
         return

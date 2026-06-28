@@ -75,7 +75,8 @@ export default function ResumeEditorPage() {
       }
       setLoading(false)
     }
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data }) => {
+      const session = data.session
       if (!session) { router.replace('/login'); return }
       setUserId(session.user.id)
       fetchResume()
