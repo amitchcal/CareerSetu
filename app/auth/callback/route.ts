@@ -13,7 +13,8 @@ export async function GET(request: NextRequest) {
   const { data, error } = await supabase.auth.exchangeCodeForSession(code)
 
   if (error || !data.user) {
-    return NextResponse.redirect(`${origin}/login?error=auth_failed`)
+    const detail = encodeURIComponent(error?.message ?? 'no user returned')
+    return NextResponse.redirect(`${origin}/login?error=auth_failed&detail=${detail}`)
   }
 
   const user = data.user
