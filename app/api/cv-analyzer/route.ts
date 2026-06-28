@@ -79,7 +79,8 @@ Return ONLY valid JSON in this exact shape, no markdown, no preamble:
     })
 
     const raw = message.content[0].type === 'text' ? message.content[0].text : ''
-    const result = JSON.parse(raw)
+    const jsonText = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim()
+    const result = JSON.parse(jsonText)
 
     return NextResponse.json(result)
   } catch (err: unknown) {

@@ -64,7 +64,8 @@ Return ONLY valid JSON, no markdown:
     })
 
     const raw = message.content[0].type === 'text' ? message.content[0].text : ''
-    const result = JSON.parse(raw)
+    const jsonText = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim()
+    const result = JSON.parse(jsonText)
 
     const { data: saved } = await supabase
       .from('tailored_profiles')
