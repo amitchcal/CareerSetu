@@ -15,19 +15,19 @@ create table if not exists tracks (
   created_at timestamptz default now()
 );
 
--- Seed common interview tracks
-insert into tracks (name, category, sort_order) values
-  ('Software Engineering', 'technical', 1),
-  ('Data Science & ML', 'technical', 2),
-  ('Product Management', 'domain', 3),
-  ('Marketing', 'domain', 4),
-  ('Sales', 'domain', 5),
-  ('Finance & Accounting', 'domain', 6),
-  ('Human Resources', 'hr', 7),
-  ('Operations', 'domain', 8),
-  ('Consulting', 'domain', 9),
-  ('General / HR Round', 'hr', 10)
-on conflict do nothing;
+-- Seed common interview tracks (skip if slug already exists)
+insert into tracks (name, slug, category, sort_order) values
+  ('Software Engineering', 'software-engineering', 'technical', 1),
+  ('Data Science & ML', 'data-science-ml', 'technical', 2),
+  ('Product Management', 'product-management', 'domain', 3),
+  ('Marketing', 'marketing', 'domain', 4),
+  ('Sales', 'sales', 'domain', 5),
+  ('Finance & Accounting', 'finance-accounting', 'domain', 6),
+  ('Human Resources', 'human-resources', 'hr', 7),
+  ('Operations', 'operations', 'domain', 8),
+  ('Consulting', 'consulting', 'domain', 9),
+  ('General / HR Round', 'general-hr', 'hr', 10)
+on conflict (slug) do nothing;
 
 -- ─── COMPANIES ─────────────────────────────────────────────
 create table if not exists companies (
@@ -56,7 +56,7 @@ insert into companies (name, sort_order) values
   ('Paytm', 15),
   ('HDFC Bank', 16),
   ('ICICI Bank', 17)
-on conflict do nothing;
+on conflict (name) do nothing;
 
 -- ─── ALTER USERS ───────────────────────────────────────────
 alter table users
