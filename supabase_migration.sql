@@ -190,17 +190,35 @@ alter table tailored_profiles enable row level security;
 alter table support_tickets enable row level security;
 
 -- Public read for tracks and companies (needed for interview setup page)
-create policy if not exists "tracks_public_read" on tracks for select using (true);
-create policy if not exists "companies_public_read" on companies for select using (true);
+do $$ begin
+  if not exists (select 1 from pg_policies where tablename='tracks' and policyname='tracks_public_read') then
+    create policy "tracks_public_read" on tracks for select using (true);
+  end if;
+  if not exists (select 1 from pg_policies where tablename='companies' and policyname='companies_public_read') then
+    create policy "companies_public_read" on companies for select using (true);
+  end if;
+end $$;
 
 -- Users can only access their own data
-create policy if not exists "resumes_own" on resumes for all using (auth.uid() = user_id);
-create policy if not exists "job_searches_own" on job_searches for all using (auth.uid() = user_id);
-create policy if not exists "job_results_own" on job_results for all using (
-  search_id in (select id from job_searches where user_id = auth.uid())
-);
-create policy if not exists "tailored_profiles_own" on tailored_profiles for all using (auth.uid() = user_id);
-create policy if not exists "support_tickets_own" on support_tickets for all using (auth.uid() = user_id or user_id is null);
+do $$ begin
+  if not exists (select 1 from pg_policies where tablename='resumes' and policyname='resumes_own') then
+    create policy "resumes_own" on resumes for all using (auth.uid() = user_id);
+  end if;
+  if not exists (select 1 from pg_policies where tablename='job_searches' and policyname='job_searches_own') then
+    create policy "job_searches_own" on job_searches for all using (auth.uid() = user_id);
+  end if;
+  if not exists (select 1 from pg_policies where tablename='job_results' and policyname='job_results_own') then
+    create policy "job_results_own" on job_results for all using (
+      search_id in (select id from job_searches where user_id = auth.uid())
+    );
+  end if;
+  if not exists (select 1 from pg_policies where tablename='tailored_profiles' and policyname='tailored_profiles_own') then
+    create policy "tailored_profiles_own" on tailored_profiles for all using (auth.uid() = user_id);
+  end if;
+  if not exists (select 1 from pg_policies where tablename='support_tickets' and policyname='support_tickets_own') then
+    create policy "support_tickets_own" on support_tickets for all using (auth.uid() = user_id or user_id is null);
+  end if;
+end $$;
 
 -- ─── STORAGE BUCKET ────────────────────────────────────────
 -- Create interview-audio bucket if it doesn't exist
