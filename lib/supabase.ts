@@ -1,10 +1,14 @@
 import { createBrowserClient } from '@supabase/ssr'
 
-// Fallback values let createBrowserClient succeed during `next build` static
-// analysis when env vars haven't been injected yet. At runtime on Vercel the
-// real values are always present.
-const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'https://placeholder.supabase.co'
-const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? 'placeholder-anon-key'
+// Strip BOM (U+FEFF), zero-width chars, and any non-ASCII from env vars.
+// Env vars pasted into Vercel can carry an invisible BOM which causes fetch
+// to throw "String contains non ISO-8859-1 code point" in the browser.
+function clean(s: string | undefined, fallback: string): string {
+  return (s ?? '').replace(/[^\x20-\x7E]/g, '').trim() || fallback
+}
+
+const url = clean(process.env.NEXT_PUBLIC_SUPABASE_URL, 'https://placeholder.supabase.co')
+const anonKey = clean(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY, 'placeholder-anon-key')
 
 // Browser client — use in Client Components only.
 // detectSessionInUrl is disabled so the OAuth code is exchanged exactly once,
