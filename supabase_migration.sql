@@ -38,7 +38,8 @@ create table if not exists companies (
   created_at timestamptz default now()
 );
 
-insert into companies (name, sort_order) values
+insert into companies (name, sort_order)
+select name, sort_order from (values
   ('TCS', 1),
   ('Infosys', 2),
   ('Wipro', 3),
@@ -56,7 +57,8 @@ insert into companies (name, sort_order) values
   ('Paytm', 15),
   ('HDFC Bank', 16),
   ('ICICI Bank', 17)
-on conflict (name) do nothing;
+) as v(name, sort_order)
+where not exists (select 1 from companies where companies.name = v.name);
 
 -- ─── ALTER USERS ───────────────────────────────────────────
 alter table users
