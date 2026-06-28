@@ -12,48 +12,47 @@ export default function AuthCallbackPage() {
   useEffect(() => {
     async function handleCallback() {
       try {
-        // Exchange the code for a session client-side
-        // (browser client has access to the PKCE code verifier in localStorage/cookies)
-        const { data, error: sessionError } = await supabase.auth.getSession()
+        const params = new URLSearchParams(window.location.search)
 
-        if (sessionError) throw sessionError
+        // Surface an OAuth provider error passed back in the URL
+        const providerError = params.get('error_description') || params.get('error')
+        if (providerError) throw new Error(`Provider error: ${providerError}`)
 
-        // If no session yet, try exchanging the code from the URL
-        if (!data.session) {
-          const params = new URLSearchParams(window.location.search)
-          const code = params.get('code')
+        // We disabled detectSessionInUrl, so exchange the code exactly once here.
+        const code = params.get('code')
 
-          if (!code) {
-            router.replace('/login?error=missing_code')
-            return
-          }
+        let session = (await supabase.auth.getSession()).data.session
+
+        if (!session) {
+          if (!code) throw new Error('No authorization code in callback URL')
 
           const { data: exchangeData, error: exchangeError } =
             await supabase.auth.exchangeCodeForSession(code)
 
-          if (exchangeError || !exchangeData.session) {
-            throw exchangeError ?? new Error('No session returned')
-          }
+          if (exchangeError) throw exchangeError
+          session = exchangeData.session
         }
 
-        // Session established — check onboarding status
-        const { data: { session } } = await supabase.auth.getSession()
-        if (!session) { router.replace('/login?error=no_session'); return }
+        if (!session) throw new Error('No session returned after code exchange')
 
-        const { data: user } = await supabase
+        // Session established — check onboarding status
+        const { data: user, error: userErr } = await supabase
           .from('users')
           .select('onboarding_complete')
           .eq('id', session.user.id)
           .maybeSingle()
 
+        if (userErr) throw userErr
+
         if (!user) {
           // New user — create row
-          await supabase.from('users').upsert({
+          const { error: upsertErr } = await supabase.from('users').upsert({
             id: session.user.id,
             email: session.user.email,
             name: session.user.user_metadata?.full_name ?? null,
             onboarding_complete: false,
           }, { onConflict: 'id' })
+          if (upsertErr) throw upsertErr
           router.replace('/onboarding/profile')
         } else if (!user.onboarding_complete) {
           router.replace('/onboarding/profile')
@@ -62,9 +61,9 @@ export default function AuthCallbackPage() {
         }
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : 'Authentication failed'
-        console.error('[auth/callback]', msg)
+        console.error('[auth/callback]', err)
         setError(msg)
-        setTimeout(() => router.replace(`/login?error=auth_failed&detail=${encodeURIComponent(msg)}`), 2000)
+        // Stay on this page so the real error is visible (no auto-redirect).
       }
     }
 
@@ -74,10 +73,12 @@ export default function AuthCallbackPage() {
   if (error) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
-        <div className="text-center">
+        <div className="max-w-md text-center">
           <p className="text-red-600 font-medium mb-2">Sign in failed</p>
-          <p className="text-sm text-gray-500">{error}</p>
-          <p className="text-xs text-gray-400 mt-2">Redirecting to login…</p>
+          <p className="text-sm text-gray-600 break-words rounded-lg bg-red-50 border border-red-100 p-3">{error}</p>
+          <a href="/login" className="inline-block mt-4 text-sm font-medium text-indigo-600 hover:text-indigo-700">
+            ← Back to login
+          </a>
         </div>
       </div>
     )
