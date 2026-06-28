@@ -7,5 +7,8 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 // Browser client — use in Client Components
 export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey)
 
-// Plain client — use in API routes / server actions that don't need cookie-based sessions
-export const supabaseAdmin = createClient(supabaseUrl, supabaseAnonKey)
+// Server-side admin client — bypasses RLS, use only in API routes
+export const supabaseAdmin = createClient(
+  supabaseUrl,
+  process.env.SUPABASE_SERVICE_ROLE_KEY ?? supabaseAnonKey
+)

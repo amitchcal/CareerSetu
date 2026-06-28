@@ -4,7 +4,19 @@
       "Skill(run)",
       "Skill(run:*)",
       "PowerShell(Start-Process powershell -ArgumentList '-NoExit', '-Command', 'cd \"C:\\\\Amit\\\\_Courses\\\\02 AI\\\\SaaS Siddhant\\\\CareerSetu\"; npm run dev' -WindowStyle Normal)",
-      "PowerShell(Start-Sleep -Seconds 8; try { $r = Invoke-WebRequest -Uri 'http://localhost:3000' -TimeoutSec 5 -UseBasicParsing; \"Status: $\\($r.StatusCode\\)\" } catch { \"Not ready yet: $_\" })"
+      "PowerShell(Start-Sleep -Seconds 8; try { $r = Invoke-WebRequest -Uri 'http://localhost:3000' -TimeoutSec 5 -UseBasicParsing; \"Status: $\\($r.StatusCode\\)\" } catch { \"Not ready yet: $_\" })",
+      "mcp__Claude_in_Chrome__navigate",
+      "mcp__Claude_in_Chrome__get_page_text",
+      "mcp__Claude_in_Chrome__read_console_messages",
+      "mcp__Claude_in_Chrome__read_page",
+      "mcp__Claude_in_Chrome__javascript_tool",
+      "mcp__Claude_in_Chrome__computer",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(d[0]['text'][2000:8000]\\)\")",
+      "Read(//c/Users/amitc/AppData/Roaming/Claude/local-agent-mode-sessions/skills-plugin/a256c738-2c38-4ad9-bca3-68d5fb5a16d5/ef58e0c0-7e6f-4e7d-8376-3d35c0d230dd/skills/docx/**)",
+      "Bash(extract-text \"C:\\\\Amit\\\\_Courses\\\\02 AI\\\\SaaS Siddhant\\\\Optimize the application for latest SEO.docx\")",
+      "Bash(pandoc \"C:\\\\Amit\\\\_Courses\\\\02 AI\\\\SaaS Siddhant\\\\Optimize the application for latest SEO.docx\" -t markdown)"
     ]
   }
 }

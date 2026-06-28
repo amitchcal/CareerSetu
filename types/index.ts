@@ -165,3 +165,42 @@ export interface Subscription {
   payment_gateway_ref: string | null;
   created_at: string;
 }
+
+// ─── Job Search ───────────────────────────────────────────────────────────────
+
+export interface JobSearch {
+  id: string;
+  user_id: string;
+  query: string;
+  location: string | null;
+  extracted_skills: string[] | null;
+  created_at: string;
+}
+
+export interface JobResult {
+  id: string;
+  search_id: string;
+  external_job_id: string | null;
+  title: string;
+  company: string;
+  location: string | null;
+  description: string | null;
+  apply_url: string;
+  source: string | null;
+  match_score: number | null;
+  matched_skills: string[] | null;
+  missing_skills: string[] | null;
+  created_at: string;
+}
+
+export interface TailoredProfile {
+  id: string;
+  user_id: string;
+  job_result_id: string;
+  original_cv_text: string | null;
+  tailored_summary: string | null;
+  tailored_bullets: string[] | null;
+  keywords_added: string[] | null;
+  upskilling_suggestions: string[] | null;
+  created_at: string;
+}

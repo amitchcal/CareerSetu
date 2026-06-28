@@ -68,3 +68,9 @@ export function useToastStore() {
 
   return { toasts, dismiss }
 }
+
+
+// Convenience hook matching shadcn/ui API shape: const { toast } = useToast()
+export function useToast() {
+  return { toast }
+}

@@ -1,6 +1,19 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import Navbar from '@/components/shared/Navbar'
 import Footer from '@/components/shared/Footer'
+
+export const metadata: Metadata = {
+  title: 'About CareerSetu — Our Mission',
+  description:
+    'CareerSetu is an AI-powered mock interview platform built for Indian job seekers. We help freshers, exam aspirants, and job switchers practice interviews in English and Hindi.',
+  alternates: { canonical: '/about' },
+  openGraph: {
+    title: 'About CareerSetu — AI Mock Interview Practice for India',
+    description: 'Learn why we built CareerSetu and how AI-powered practice helps Indian job seekers succeed.',
+    url: '/about',
+  },
+}
 
 export default function AboutPage() {
   return (

@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Loader2, Mic, TrendingUp, Trophy, X, ChevronRight, CalendarDays, Star, Zap } from 'lucide-react'
+import { Loader2, Mic, TrendingUp, Trophy, X, ChevronRight, CalendarDays, Star, Zap, FileSearch, Briefcase, Video, FileText } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import Navbar from '@/components/shared/Navbar'
 
@@ -189,6 +189,66 @@ export default function DashboardPage() {
             </p>
           </div>
         </div>
+
+        {/* Video Interview CTA */}
+        <Link
+          href="/video-interview/new"
+          className="flex items-center gap-4 rounded-2xl border border-purple-100 bg-purple-50 px-5 py-4 shadow-sm hover:bg-purple-100 transition-colors"
+        >
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-purple-600">
+            <Video className="h-5 w-5 text-white" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold text-purple-900 text-sm">Video Interview</p>
+            <p className="text-xs text-purple-600 mt-0.5">Practice on camera — get feedback on delivery, clarity and structure</p>
+          </div>
+          <ChevronRight className="h-4 w-4 text-purple-400 shrink-0" />
+        </Link>
+
+        {/* CV Analyzer CTA */}
+        <Link
+          href="/cv-analyzer"
+          className="flex items-center gap-4 rounded-2xl border border-indigo-100 bg-indigo-50 px-5 py-4 shadow-sm hover:bg-indigo-100 transition-colors"
+        >
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-600">
+            <FileSearch className="h-5 w-5 text-white" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold text-indigo-900 text-sm">CV Analyzer</p>
+            <p className="text-xs text-indigo-600 mt-0.5">Upload JD + CV to find gaps and get an ATS-optimized resume</p>
+          </div>
+          <ChevronRight className="h-4 w-4 text-indigo-400 shrink-0" />
+        </Link>
+
+        {/* Resume Builder CTA */}
+        <Link
+          href="/resume-builder"
+          className="flex items-center gap-4 rounded-2xl border border-amber-100 bg-amber-50 px-5 py-4 shadow-sm hover:bg-amber-100 transition-colors"
+        >
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500">
+            <FileText className="h-5 w-5 text-white" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold text-amber-900 text-sm">Resume Builder</p>
+            <p className="text-xs text-amber-700 mt-0.5">Build a professional, ATS-friendly CV with passport photo in one click</p>
+          </div>
+          <ChevronRight className="h-4 w-4 text-amber-400 shrink-0" />
+        </Link>
+
+        {/* Job Search CTA */}
+        <Link
+          href="/jobs"
+          className="flex items-center gap-4 rounded-2xl border border-green-100 bg-green-50 px-5 py-4 shadow-sm hover:bg-green-100 transition-colors"
+        >
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-green-600">
+            <Briefcase className="h-5 w-5 text-white" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold text-green-900 text-sm">Find Matching Jobs</p>
+            <p className="text-xs text-green-700 mt-0.5">Upload your CV to discover jobs with skill-match % and tailored profile</p>
+          </div>
+          <ChevronRight className="h-4 w-4 text-green-400 shrink-0" />
+        </Link>
 
         {/* Recent session */}
         <div>

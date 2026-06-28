@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic'
 import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Loader2, ChevronDown, Check, Library, SlidersHorizontal } from 'lucide-react'
+import { ChevronDown, Check, Library, SlidersHorizontal } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import Navbar from '@/components/shared/Navbar'
 

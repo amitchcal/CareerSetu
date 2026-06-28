@@ -7,6 +7,7 @@ import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 import { Loader2, TrendingUp, TrendingDown, MessageSquare, ChevronRight, Download, Gauge, AudioLines } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import ResumeInsightsPanel from '@/components/shared/ResumeInsightsPanel'
 import Navbar from '@/components/shared/Navbar'
 import RadarChart, { RadarDatum } from '@/components/shared/RadarChart'
 import { COMPETENCY_LABELS } from '@/lib/competencies'
@@ -246,6 +247,9 @@ export default function FeedbackPage() {
                 ))}
               </div>
             </div>
+
+            {/* Resume Insights */}
+            <ResumeInsightsPanel sessionId={sessionId} role={role} />
 
             {/* CTAs */}
             <div className="flex flex-col sm:flex-row gap-3 pt-2 print:hidden">

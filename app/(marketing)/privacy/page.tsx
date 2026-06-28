@@ -1,6 +1,14 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import Navbar from '@/components/shared/Navbar'
 import Footer from '@/components/shared/Footer'
+
+export const metadata: Metadata = {
+  title: 'Privacy Policy',
+  description: 'CareerSetu privacy policy — how we collect, use, and protect your personal data.',
+  alternates: { canonical: '/privacy' },
+  robots: { index: true, follow: false },
+}
 
 export default function PrivacyPage() {
   return (

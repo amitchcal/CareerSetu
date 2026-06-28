@@ -143,7 +143,7 @@ export default function TestRunnerPage() {
     setAnswers(a => ({ ...a, [qid]: idx }))
   }
   function toggleMark(qid: string) {
-    setMarked(m => { const n = new Set(m); n.has(qid) ? n.delete(qid) : n.add(qid); return n })
+    setMarked(m => { const n = new Set(m); if (n.has(qid)) { n.delete(qid) } else { n.add(qid) }; return n })
   }
 
   if (loading || remaining === null) {

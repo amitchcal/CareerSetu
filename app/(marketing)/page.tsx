@@ -1,4 +1,6 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
+import Script from 'next/script'
 import { Target, Mic, TrendingUp, Building2, Code2, Megaphone, Users } from 'lucide-react'
 import Navbar from '@/components/shared/Navbar'
 import Footer from '@/components/shared/Footer'
@@ -8,6 +10,87 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion'
+
+export const revalidate = 60
+
+export const metadata: Metadata = {
+  title: 'AI Mock Interview Practice — Free to Start',
+  description:
+    'Practice mock interviews in English or Hindi with AI. Get honest feedback for SSC, Bank PO, software engineer, and sales roles. 1 free session per week — no credit card needed.',
+  alternates: { canonical: '/' },
+  openGraph: {
+    title: 'CareerSetu — AI Mock Interview Practice for India',
+    description:
+      'Practice mock interviews with AI in English or Hindi. Honest, calibrated feedback for SSC, Bank PO, tech, and more. Free to start.',
+    url: '/',
+  },
+}
+
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://careersetu.in'
+
+const jsonLdOrganization = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: 'CareerSetu',
+  url: BASE_URL,
+  logo: `${BASE_URL}/icon.svg`,
+  sameAs: [
+    'https://www.linkedin.com/company/careersetu',
+    'https://github.com/careersetu',
+  ],
+  contactPoint: {
+    '@type': 'ContactPoint',
+    email: 'support@careersetu.in',
+    contactType: 'customer support',
+    availableLanguage: ['English', 'Hindi'],
+  },
+}
+
+const jsonLdWebSite = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'CareerSetu',
+  url: BASE_URL,
+  potentialAction: {
+    '@type': 'SearchAction',
+    target: `${BASE_URL}/try?q={search_term_string}`,
+    'query-input': 'required name=search_term_string',
+  },
+}
+
+const jsonLdSoftwareApp = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: 'CareerSetu',
+  operatingSystem: 'Web',
+  applicationCategory: 'EducationApplication',
+  offers: [
+    {
+      '@type': 'Offer',
+      name: 'Free',
+      price: '0',
+      priceCurrency: 'INR',
+      description: '1 mock interview per week',
+    },
+    {
+      '@type': 'Offer',
+      name: 'Starter',
+      price: '199',
+      priceCurrency: 'INR',
+      description: 'Unlimited mock interviews with detailed feedback',
+    },
+    {
+      '@type': 'Offer',
+      name: 'Pro',
+      price: '499',
+      priceCurrency: 'INR',
+      description: 'Unlimited interviews, all roles, Hinglish support',
+    },
+  ],
+  description:
+    'AI-powered mock interview practice for Indian job seekers. Practice in English or Hindi for SSC, Bank PO, software engineer, and other roles.',
+  inLanguage: ['en', 'hi'],
+}
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
@@ -89,8 +172,38 @@ const FAQS = [
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
 export default function HomePage() {
+  const jsonLdFAQ = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: FAQS.map(({ q, a }) => ({
+      '@type': 'Question',
+      name: q,
+      acceptedAnswer: { '@type': 'Answer', text: a },
+    })),
+  }
+
   return (
     <>
+      <Script
+        id="ld-organization"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdOrganization) }}
+      />
+      <Script
+        id="ld-website"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdWebSite) }}
+      />
+      <Script
+        id="ld-software-app"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdSoftwareApp) }}
+      />
+      <Script
+        id="ld-faq"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdFAQ) }}
+      />
       <Navbar />
 
       <main>

@@ -6,6 +6,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { Loader2, Sparkles, ArrowRight, Star, TrendingUp, TrendingDown, RefreshCw } from 'lucide-react'
 import Navbar from '@/components/shared/Navbar'
+import Footer from '@/components/shared/Footer'
 
 const ROLES = ['Software Engineer', 'Sales & Marketing', 'HR / Behavioural', 'SSC / Bank PO']
 
@@ -151,6 +152,7 @@ export default function TryDemoPage() {
           </div>
         )}
       </main>
+      <Footer />
     </>
   )
 }

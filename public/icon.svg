@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="100%" height="100%">
+  <defs>
+    <!-- Premium Golden Metallic Gradient -->
+    <linearGradient id="gold-metallic" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#C5A059" />
+      <stop offset="30%" stop-color="#FDF0CD" />
+      <stop offset="45%" stop-color="#D4AF37" />
+      <stop offset="60%" stop-color="#F3E5AB" />
+      <stop offset="80%" stop-color="#AA7C11" />
+      <stop offset="100%" stop-color="#846214" />
+    </linearGradient>
+
+    <!-- Deep Golden Secondary Gradient -->
+    <linearGradient id="gold-subtle" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#F3E5AB" />
+      <stop offset="50%" stop-color="#AA7C11" />
+      <stop offset="100%" stop-color="#4A3B18" />
+    </linearGradient>
+
+    <!-- Deep Luxury Black-to-Charcoal Gradient -->
+    <linearGradient id="black-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1F1F1F" />
+      <stop offset="50%" stop-color="#121212" />
+      <stop offset="100%" stop-color="#050505" />
+    </linearGradient>
+
+    <!-- Inner Shadow effect -->
+    <filter id="soft-glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Solid Elegant Dark Grey Rounded Square Background -->
+  <rect width="500" height="500" rx="100" fill="url(#black-gradient)" />
+  
+  <!-- Subtle gold frame outline -->
+  <rect x="15" y="15" width="470" height="470" rx="85" fill="none" stroke="url(#gold-metallic)" stroke-width="2" stroke-opacity="0.3" />
+
+  <!-- Logo Mark Group -->
+  <g transform="translate(10, -5)" filter="url(#soft-glow)">
+    <!-- Bridge Arc 1 (Setu representation) -->
+    <path d="M120,290 C180,210 300,210 360,290" fill="none" stroke="url(#gold-metallic)" stroke-width="18" stroke-linecap="round" />
+    
+    <!-- Bridge Arc 2 (Interlocking lower arc for connection) -->
+    <path d="M140,320 C190,260 290,260 340,320" fill="none" stroke="url(#gold-subtle)" stroke-width="10" stroke-linecap="round" stroke-opacity="0.8" />
+
+    <!-- Rising Path (Arrow pointing upper right, career trajectory) -->
+    <path d="M170,350 L315,185 M315,185 L260,185 M315,185 L315,240" fill="none" stroke="url(#gold-metallic)" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" />
+
+    <!-- Sleek Minimalist Geometric Accents / Professional Dots representing milestones -->
+    <circle cx="210" cy="210" r="14" fill="url(#gold-metallic)" />
+    <circle cx="280" cy="180" r="14" fill="url(#gold-metallic)" />
+    <circle cx="350" cy="190" r="10" fill="url(#gold-subtle)" />
+  </g>
+  
+  <!-- Sleek typography embedded inside the logo in case they use it standalone -->
+  <text x="250" y="440" font-family="'Space Grotesk', 'Inter', sans-serif" font-size="34" font-weight="700" letter-spacing="4" fill="url(#gold-metallic)" text-anchor="middle">CAREERSETU</text>
+  <text x="250" y="468" font-family="'Inter', sans-serif" font-size="14" font-weight="500" letter-spacing="6" fill="#A1A1AA" text-anchor="middle">BRIDGE TO YOUR DREAM JOB</text>
+</svg>

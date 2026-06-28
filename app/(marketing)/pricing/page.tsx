@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { Check } from 'lucide-react'
 import Navbar from '@/components/shared/Navbar'
@@ -8,6 +9,18 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion'
+
+export const metadata: Metadata = {
+  title: 'Pricing — Free, Starter & Pro Plans',
+  description:
+    'CareerSetu pricing: start free with 1 mock interview per week. Upgrade to Starter (₹199/mo) for unlimited interviews or Pro (₹499/mo) for all roles and Hinglish support. No lock-in.',
+  alternates: { canonical: '/pricing' },
+  openGraph: {
+    title: 'CareerSetu Pricing — Free, Starter & Pro Plans',
+    description: 'Start free. Upgrade for unlimited AI mock interviews and detailed feedback.',
+    url: '/pricing',
+  },
+}
 
 const PLANS = [
   {
