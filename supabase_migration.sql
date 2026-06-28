@@ -8,12 +8,17 @@
 create table if not exists tracks (
   id uuid primary key default gen_random_uuid(),
   name text not null,
+  slug text unique,
   category text,         -- 'technical' | 'hr' | 'domain' | null
   parent_id uuid references tracks(id),
   is_active boolean default true,
   sort_order int default 0,
   created_at timestamptz default now()
 );
+
+-- Add slug column if table already existed without it
+alter table tracks add column if not exists slug text;
+alter table tracks add constraint if not exists tracks_slug_unique unique (slug);
 
 -- Seed common interview tracks (skip if slug already exists)
 insert into tracks (name, slug, category, sort_order) values
@@ -33,10 +38,15 @@ on conflict (slug) do nothing;
 create table if not exists companies (
   id uuid primary key default gen_random_uuid(),
   name text not null,
+  slug text unique,
   interview_style_notes text,
   sort_order int default 0,
   created_at timestamptz default now()
 );
+
+-- Add slug column if table already existed without it
+alter table companies add column if not exists slug text;
+alter table companies add constraint if not exists companies_slug_unique unique (slug);
 
 insert into companies (name, slug, sort_order)
 select name, slug, sort_order from (values
@@ -168,13 +178,22 @@ create table if not exists support_tickets (
   user_id uuid references users(id),
   name text,
   email text,
-  subject text not null,
+  phone text,
+  criticality text,                  -- 'critical' | 'major' | 'medium' | 'low' | 'suggestion'
   description text not null,
+  screenshot_url text,
   status text default 'open',        -- 'open' | 'in_progress' | 'closed'
   admin_comment text,
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
+
+-- Add missing columns if table already existed (or was created with old schema)
+alter table support_tickets add column if not exists phone text;
+alter table support_tickets add column if not exists criticality text;
+alter table support_tickets add column if not exists screenshot_url text;
+-- Make subject nullable (old schema had it NOT NULL but API doesn't use it)
+alter table support_tickets alter column subject drop not null;
 
 drop trigger if exists tickets_updated_at on support_tickets;
 create trigger tickets_updated_at
