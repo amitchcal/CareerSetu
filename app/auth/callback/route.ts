@@ -26,13 +26,12 @@ export async function GET(request: NextRequest) {
     .maybeSingle()
 
   if (!existing) {
-    await supabase.from('users').insert({
+    await supabase.from('users').upsert({
       id: user.id,
-      phone: null,
       email: user.email,
       name: user.user_metadata?.full_name ?? null,
       onboarding_complete: false,
-    })
+    }, { onConflict: 'id' })
     return NextResponse.redirect(`${origin}/onboarding/profile`)
   }
 

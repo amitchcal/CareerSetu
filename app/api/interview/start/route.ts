@@ -1,70 +1,98 @@
-﻿import { NextRequest, NextResponse } from 'next/server'
-import { createSupabaseServerClient } from '@/lib/supabase-server'
+import { NextRequest, NextResponse } from 'next/server'
+import { supabaseAdmin } from '@/lib/supabase'
 import { anthropic } from '@/lib/anthropic'
+import { buildInterviewContext, isSenior } from '@/lib/interview-prompt'
+
+function toDifficulty(seniority: string): string {
+  return seniority === 'lead' ? 'experienced' : seniority
+}
 
 export async function POST(req: NextRequest) {
   try {
-    const { userId, role, difficulty, language, numQuestions } = await req.json()
+    const body = await req.json()
+    const {
+      userId, trackId, companyId, roundType, seniority,
+      language, numQuestions, jobTitle, jobDescription, resumeText,
+    } = body
 
-    if (!userId || !role || !difficulty || !language || !numQuestions) {
+    if (!userId || !trackId || !seniority || !language || !numQuestions) {
       return NextResponse.json({ error: 'Missing required fields.' }, { status: 400 })
     }
+    if (isSenior(seniority) && !jobDescription?.trim()) {
+      return NextResponse.json({ error: 'A job description is required for experienced / lead interviews.' }, { status: 400 })
+    }
 
-    const supabase = createSupabaseServerClient()
+    const supabase = supabaseAdmin
 
-    // Create session row
+    // Resolve track + optional company for grounding
+    const { data: track } = await supabase.from('tracks').select('name, category').eq('id', trackId).single()
+    if (!track) return NextResponse.json({ error: 'Track not found.' }, { status: 404 })
+
+    let companyName: string | null = null
+    let companyNotes: string | null = null
+    if (companyId) {
+      const { data: company } = await supabase.from('companies').select('name, interview_style_notes').eq('id', companyId).single()
+      companyName = company?.name ?? null
+      companyNotes = company?.interview_style_notes ?? null
+    }
+
+    const difficulty = toDifficulty(seniority)
+    const role = (jobTitle?.trim() || track.name) as string
+
+    // Résumé is passed from the client (read there with the user's own session) and
+    // snapshotted onto the session, so follow-up generation can reuse it server-side.
+    const resumeSnapshot = isSenior(seniority) && typeof resumeText === 'string' && resumeText.trim()
+      ? resumeText.trim() : null
+
+    const context = buildInterviewContext({
+      trackName: track.name, category: track.category, companyName, companyNotes,
+      roundType, seniority, jobTitle, jobDescription, resumeText: resumeSnapshot,
+    })
+
+    // Create the session
     const { data: session, error: sessionErr } = await supabase
       .from('sessions')
-      .insert({ user_id: userId, role, difficulty, language, num_questions: numQuestions, status: 'in_progress' })
+      .insert({
+        user_id: userId, role, difficulty, language, num_questions: numQuestions, status: 'in_progress',
+        track_id: trackId, company_id: companyId ?? null, round_type: roundType ?? null,
+        seniority, job_title: jobTitle?.trim() || null, job_description: jobDescription?.trim() || null,
+        resume_snapshot: resumeSnapshot,
+      })
       .select('id')
       .single()
 
     if (sessionErr || !session) {
       console.error('[interview/start] session insert:', sessionErr)
-      return NextResponse.json({ error: 'Could not create session.' }, { status: 500 })
+      return NextResponse.json({ error: 'Could not create session.', detail: sessionErr?.message }, { status: 500 })
     }
-
     const sessionId = session.id
 
-    // Generate first question via Claude
+    // First question
     const message = await anthropic.messages.create({
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 300,
-      messages: [
-        {
-          role: 'user',
-          content: `You are an experienced interviewer conducting a mock interview.
-Role being interviewed for: ${role}
-Experience level: ${difficulty}
+      messages: [{
+        role: 'user',
+        content: `You are an experienced interviewer conducting a mock interview.
+${context}
 Language: ${language}
 
-Generate ONE opening interview question. It should be a natural, conversational opener (e.g. "Tell me about yourself" style or a relevant background question).
+Generate ONE opening interview question — a natural conversational opener appropriate to the round type and seniority above.
 
 Requirements:
-- Appropriate for the experience level
+- Appropriate for the seniority
 - Answerable verbally in 60–90 seconds
 - Output ONLY the question text, no preamble, no numbering`,
-        },
-      ],
+      }],
     })
 
     const firstQuestion = message.content[0].type === 'text' ? message.content[0].text.trim() : ''
+    if (!firstQuestion) return NextResponse.json({ error: 'Failed to generate first question.' }, { status: 500 })
 
-    if (!firstQuestion) {
-      return NextResponse.json({ error: 'Failed to generate first question.' }, { status: 500 })
-    }
-
-    // Store question 1
     const { error: qErr } = await supabase.from('session_questions').insert({
-      session_id: sessionId,
-      question_number: 1,
-      question_text: firstQuestion,
+      session_id: sessionId, question_number: 1, question_text: firstQuestion,
     })
-
-    if (qErr) {
-      console.error('[interview/start] question insert:', qErr)
-      // Non-fatal — session exists, we return sessionId and question anyway
-    }
+    if (qErr) console.error('[interview/start] question insert:', qErr)
 
     return NextResponse.json({ sessionId, firstQuestion })
   } catch (err: unknown) {
