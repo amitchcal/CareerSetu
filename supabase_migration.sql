@@ -38,27 +38,27 @@ create table if not exists companies (
   created_at timestamptz default now()
 );
 
-insert into companies (name, sort_order)
-select name, sort_order from (values
-  ('TCS', 1),
-  ('Infosys', 2),
-  ('Wipro', 3),
-  ('HCL Technologies', 4),
-  ('Tech Mahindra', 5),
-  ('Cognizant', 6),
-  ('Accenture', 7),
-  ('IBM India', 8),
-  ('Amazon India', 9),
-  ('Google India', 10),
-  ('Microsoft India', 11),
-  ('Flipkart', 12),
-  ('Zomato', 13),
-  ('Swiggy', 14),
-  ('Paytm', 15),
-  ('HDFC Bank', 16),
-  ('ICICI Bank', 17)
-) as v(name, sort_order)
-where not exists (select 1 from companies where companies.name = v.name);
+insert into companies (name, slug, sort_order)
+select name, slug, sort_order from (values
+  ('TCS', 'tcs', 1),
+  ('Infosys', 'infosys', 2),
+  ('Wipro', 'wipro', 3),
+  ('HCL Technologies', 'hcl-technologies', 4),
+  ('Tech Mahindra', 'tech-mahindra', 5),
+  ('Cognizant', 'cognizant', 6),
+  ('Accenture', 'accenture', 7),
+  ('IBM India', 'ibm-india', 8),
+  ('Amazon India', 'amazon-india', 9),
+  ('Google India', 'google-india', 10),
+  ('Microsoft India', 'microsoft-india', 11),
+  ('Flipkart', 'flipkart', 12),
+  ('Zomato', 'zomato', 13),
+  ('Swiggy', 'swiggy', 14),
+  ('Paytm', 'paytm', 15),
+  ('HDFC Bank', 'hdfc-bank', 16),
+  ('ICICI Bank', 'icici-bank', 17)
+) as v(name, slug, sort_order)
+where not exists (select 1 from companies where companies.slug = v.slug);
 
 -- ─── ALTER USERS ───────────────────────────────────────────
 alter table users
