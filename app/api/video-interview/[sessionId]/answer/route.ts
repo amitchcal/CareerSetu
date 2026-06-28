@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 import { anthropic } from '@/lib/anthropic'
 import { buildInterviewContext } from '@/lib/interview-prompt'
 import { computeDeliveryMetrics } from '@/lib/delivery'

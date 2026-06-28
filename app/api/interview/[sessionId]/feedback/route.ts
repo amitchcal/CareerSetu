@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 import { anthropic } from '@/lib/anthropic'
 import { pickCompetencies, COMPETENCY_LABELS } from '@/lib/competencies'
 
