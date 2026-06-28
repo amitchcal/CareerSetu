@@ -22,6 +22,8 @@ Output ONLY the question text, no preamble, no numbering.`,
     return NextResponse.json({ question })
   } catch (err: unknown) {
     console.error('[demo/question]', err)
-    return NextResponse.json({ error: 'Something went wrong.' }, { status: 500 })
+    const detail = err instanceof Error ? err.message : String(err)
+    const hasKey = Boolean(process.env.ANTHROPIC_API_KEY)
+    return NextResponse.json({ error: 'Something went wrong.', detail, hasKey }, { status: 500 })
   }
 }
