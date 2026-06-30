@@ -1,3 +1,7 @@
+import createNextIntlPlugin from 'next-intl/plugin';
+
+const withNextIntl = createNextIntlPlugin('./i18n/request.ts');
+
 /** @type {import('next').NextConfig} */
 const securityHeaders = [
   { key: 'X-DNS-Prefetch-Control', value: 'on' },
@@ -6,7 +10,7 @@ const securityHeaders = [
   { key: 'X-XSS-Protection', value: '1; mode=block' },
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
   { key: 'Permissions-Policy', value: 'camera=(), microphone=(self), geolocation=()' },
-]
+];
 
 const nextConfig = {
   images: {
@@ -21,16 +25,9 @@ const nextConfig = {
         source: '/(.*)',
         headers: securityHeaders,
       },
-      {
-        source: '/(|pricing|about|privacy|terms)',
-        headers: [
-          { key: 'Cache-Control', value: 's-maxage=60, stale-while-revalidate=300' },
-        ],
-      },
-    ]
+    ];
   },
-  // Compress responses
   compress: true,
 };
 
-export default nextConfig;
+export default withNextIntl(nextConfig);

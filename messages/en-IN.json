@@ -1,0 +1,174 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "projects": "Projects",
+    "newProject": "New Project",
+    "dna": "Designer DNA",
+    "billing": "Billing",
+    "logout": "Log out"
+  },
+  "auth": {
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "email": "Email",
+    "password": "Password",
+    "continueWithGoogle": "Continue with Google",
+    "alreadyHaveAccount": "Already have an account?",
+    "noAccount": "Don't have an account?"
+  },
+  "dashboard": {
+    "heading": "Your Projects",
+    "emptyState": "No projects yet. Create your first project.",
+    "newProject": "New Project",
+    "projectCount": "{count, plural, one {# project} other {# projects}}"
+  },
+  "project": {
+    "create": "Create Project",
+    "name": "Project Name",
+    "namePlaceholder": "e.g. Sharma 3BHK Renovation",
+    "market": "Market",
+    "status": {
+      "draft": "Draft",
+      "validated": "Validated",
+      "concept": "Concept Ready",
+      "boq": "BOQ Ready",
+      "proposal": "Proposal Ready",
+      "complete": "Complete"
+    }
+  },
+  "intake": {
+    "heading": "Project Brief",
+    "clientName": "Client Name",
+    "budget": "Budget",
+    "budgetPlaceholder": "Enter budget",
+    "currency": "₹",
+    "finishTier": "Finish Tier",
+    "tiers": {
+      "economy": "Economy",
+      "premium": "Premium",
+      "luxury": "Luxury"
+    },
+    "stylePref": "Style Preference",
+    "culturalRules": "Cultural Rules",
+    "vastu": "Vastu Shastra",
+    "vastuHelp": "Apply Vastu guidelines to room placements and orientations.",
+    "areaUnit": "sq ft",
+    "ceilingHeight": "Ceiling Height (ft)",
+    "save": "Save Brief"
+  },
+  "floorplan": {
+    "upload": "Upload Floor Plan",
+    "uploadHint": "PDF, JPG or PNG — max 10 MB",
+    "parseSuccess": "Floor plan parsed successfully",
+    "parseFailed": "Could not parse floor plan. Please enter rooms manually.",
+    "manualEntry": "Enter Rooms Manually",
+    "confirmRooms": "Confirm Rooms",
+    "room": {
+      "name": "Room Name",
+      "length": "Length (ft)",
+      "width": "Width (ft)",
+      "ceilingHt": "Ceiling Height (ft)"
+    },
+    "confirm": "Confirm & Continue",
+    "addRoom": "Add Room"
+  },
+  "validation": {
+    "heading": "Checking your brief…",
+    "missing": "Please complete these fields before generating a concept:",
+    "cultural": "Confirm cultural guidelines:",
+    "ok": "Brief is complete. Ready to generate concept.",
+    "fix": "Fix Issues"
+  },
+  "concept": {
+    "generate": "Generate Concept",
+    "generating": "Generating your design concept…",
+    "heading": "Design Concept",
+    "room": "Room",
+    "styleDirection": "Style Direction",
+    "keyFeatures": "Key Features",
+    "culturalNotes": "Cultural Notes",
+    "clearanceFlags": "Clearance Flags",
+    "renderBrief": "Render Brief",
+    "assumptions": "Assumptions",
+    "version": "Version {version}"
+  },
+  "boq": {
+    "generate": "Generate BOQ",
+    "generating": "Generating Bill of Quantities…",
+    "heading": "Bill of Quantities",
+    "room": "Room",
+    "item": "Item",
+    "qty": "Qty",
+    "unit": "Unit",
+    "rate": "Rate (₹)",
+    "amount": "Amount (₹)",
+    "tier": "Tier",
+    "subtotal": "Subtotal",
+    "tax": "GST (18%)",
+    "total": "Total",
+    "budgetDelta": "vs. Budget",
+    "underBudget": "Under budget",
+    "overBudget": "Over budget",
+    "valueEngineering": "Value Engineering Options",
+    "exportXlsx": "Export XLSX",
+    "version": "Version {version}"
+  },
+  "proposal": {
+    "generate": "Generate Proposal",
+    "generating": "Generating client proposal…",
+    "heading": "Client Proposal",
+    "download": "Download PDF",
+    "disclaimer": "Rates shown are directional estimates. Working drawings require sign-off by a licensed professional.",
+    "version": "Version {version}"
+  },
+  "render": {
+    "dispatch": "Render Room",
+    "queued": "Render queued…",
+    "running": "Rendering…",
+    "done": "Render ready",
+    "failed": "Render failed",
+    "viewRender": "View Render"
+  },
+  "dna": {
+    "heading": "Designer DNA",
+    "train": "Train DNA",
+    "uploadAssets": "Upload Past Projects",
+    "uploadHint": "Images of your previous projects, moodboards, or material sheets",
+    "generating": "Extracting your design signature…",
+    "confidence": "Confidence",
+    "materials": "Preferred Materials",
+    "colors": "Preferred Colors",
+    "layouts": "Layout Patterns",
+    "signature": "Signature Elements"
+  },
+  "billing": {
+    "heading": "Subscription",
+    "plan": {
+      "free": "Free",
+      "starter": "Starter",
+      "professional": "Professional"
+    },
+    "quota": "{used} of {total} projects used",
+    "upgrade": "Upgrade Plan",
+    "checkout": "Proceed to Checkout"
+  },
+  "errors": {
+    "unauthorized": "Please sign in to continue.",
+    "notFound": "Not found.",
+    "quotaExceeded": "You've reached your project limit. Please upgrade your plan.",
+    "providerError": "The AI service is temporarily unavailable. Please try again.",
+    "serverError": "Something went wrong. Please try again.",
+    "validationError": "Please check the highlighted fields."
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "back": "Back",
+    "next": "Next",
+    "loading": "Loading…",
+    "retry": "Retry",
+    "advisory": "All costs are directional estimates. Rates need local verification. Working drawings require a licensed professional's sign-off."
+  }
+}
