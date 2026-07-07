@@ -9,16 +9,35 @@ import { supabase } from '@/lib/supabase'
 
 export default function AuthCallbackPage() {
   const router = useRouter()
-  const [error, setError] = useState('')
+  const [errorMsg, setErrorMsg] = useState('')
 
   useEffect(() => {
     async function handleCallback() {
-      // Supabase exchanges the OAuth code automatically when the client initialises.
-      // We just need to wait for the session to be available.
+      const params = new URLSearchParams(window.location.search)
+
+      // If Supabase/Google returned an error in the redirect URL, show it
+      const oauthError = params.get('error_description') ?? params.get('error')
+      if (oauthError) {
+        setErrorMsg(oauthError)
+        return
+      }
+
+      // PKCE flow: Supabase redirects with ?code=xxx — must exchange it for a session
+      const code = params.get('code')
+      if (code) {
+        const { error: exchangeErr } = await supabase.auth.exchangeCodeForSession(code)
+        if (exchangeErr) {
+          setErrorMsg(exchangeErr.message)
+          return
+        }
+      }
+
+      // Implicit / magic-link flow: tokens arrive in the URL hash — Supabase
+      // detects and stores them automatically when the client initialises.
       const { data: { session }, error: sessionErr } = await supabase.auth.getSession()
 
       if (sessionErr || !session) {
-        setError('Sign in failed. Please try again.')
+        setErrorMsg('Could not retrieve session. Please try signing in again.')
         return
       }
 
@@ -33,18 +52,16 @@ export default function AuthCallbackPage() {
         .maybeSingle()
 
       if (fetchErr) {
-        setError('Something went wrong. Please try again.')
+        setErrorMsg('Account lookup failed. Please try again.')
         return
       }
 
       if (!existing) {
-        // New user — insert a row (phone column stores email for OAuth users)
         const { error: insertErr } = await supabase
           .from('users')
           .insert({ phone: userEmail, onboarding_complete: false })
 
         if (insertErr) {
-          // Row might already exist with a different lookup — try redirect anyway
           console.warn('[auth/callback] insert error:', insertErr.message)
         }
         router.replace('/onboarding/profile')
@@ -58,12 +75,12 @@ export default function AuthCallbackPage() {
     handleCallback()
   }, [router])
 
-  if (error) {
+  if (errorMsg) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center gap-4 px-4">
         <div className="rounded-2xl border border-red-200 bg-red-50 px-6 py-5 text-center max-w-sm w-full">
           <p className="text-sm font-semibold text-red-700 mb-1">Sign in failed</p>
-          <p className="text-sm text-red-600">{error}</p>
+          <p className="text-sm text-red-600">{errorMsg}</p>
         </div>
         <button
           onClick={() => router.push('/login')}
