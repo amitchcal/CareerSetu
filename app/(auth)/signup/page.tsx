@@ -1,12 +1,12 @@
 export const dynamic = 'force-dynamic'
 
 import AuthLayout from '@/components/shared/AuthLayout'
-import PhoneAuthForm from '@/components/shared/PhoneAuthForm'
+import AuthForm from '@/components/shared/AuthForm'
 
 export default function SignupPage() {
   return (
-    <AuthLayout title="Create your account" subtitle="Enter your mobile number to get started">
-      <PhoneAuthForm mode="signup" />
+    <AuthLayout title="Create your account" subtitle="Choose how you want to sign up">
+      <AuthForm mode="signup" />
     </AuthLayout>
   )
 }
