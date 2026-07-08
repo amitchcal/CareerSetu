@@ -7,8 +7,8 @@ function clean(s: string | undefined, fallback: string): string {
   return (s ?? '').replace(/[^\x20-\x7E]/g, '').trim() || fallback
 }
 
-const url = clean(process.env.NEXT_PUBLIC_SUPABASE_URL, 'https://placeholder.supabase.co')
-const anonKey = clean(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY, 'placeholder-anon-key')
+const url = clean(process.env.NEXT_PUBLIC_SUPABASE_URL, 'https://bnxshcckbasylmvbsagc.supabase.co')
+const anonKey = clean(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY, 'eyJhbGci••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••')
 
 // Browser client — use in Client Components only.
 // detectSessionInUrl is disabled so the OAuth code is exchanged exactly once,
