@@ -5,14 +5,30 @@ export const dynamic = 'force-dynamic'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Loader2, Briefcase, Mail } from 'lucide-react'
+import { Loader2, Briefcase, Eye, EyeOff, Mail } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { auth, googleProvider } from '@/lib/firebase'
 import { signInWithPopup } from 'firebase/auth'
 import { toast } from '@/hooks/useToast'
 
+const PASSWORD_RULES = [
+  { test: (p: string) => p.length >= 8, label: 'At least 8 characters' },
+  { test: (p: string) => /[A-Z]/.test(p), label: 'One uppercase letter' },
+  { test: (p: string) => /[a-z]/.test(p), label: 'One lowercase letter' },
+  { test: (p: string) => /[0-9]/.test(p), label: 'One number' },
+  { test: (p: string) => /[^A-Za-z0-9]/.test(p), label: 'One special character' },
+]
+
+function isPasswordStrong(p: string) {
+  return PASSWORD_RULES.every((r) => r.test(p))
+}
+
 function isEmail(v: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim())
+}
+
+function isValidMobile(v: string) {
+  return /^[6-9]\d{9}$/.test(v)
 }
 
 function GoogleIcon() {
@@ -26,28 +42,42 @@ function GoogleIcon() {
   )
 }
 
-type Step = 'main' | 'otp'
+type Mode = 'password' | 'otp-email' | 'otp-verify'
 
 export default function SignupPage() {
   const router = useRouter()
 
-  const [step, setStep] = useState<Step>('main')
+  const [mode, setMode] = useState<Mode>('password')
+
+  // Password signup
   const [email, setEmail] = useState('')
   const [mobile, setMobile] = useState('')
-  const [emailError, setEmailError] = useState('')
-  const [mobileError, setMobileError] = useState('')
+  const [password, setPassword] = useState('')
+  const [confirm, setConfirm] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirm, setShowConfirm] = useState(false)
+  const [passwordFocused, setPasswordFocused] = useState(false)
+  const [pwErrors, setPwErrors] = useState<Record<string, string>>({})
+
+  // OTP signup
+  const [otpEmail, setOtpEmail] = useState('')
+  const [otpMobile, setOtpMobile] = useState('')
+  const [otpEmailError, setOtpEmailError] = useState('')
+  const [otpMobileError, setOtpMobileError] = useState('')
   const [otp, setOtp] = useState('')
   const [otpError, setOtpError] = useState('')
+
   const [loadingGoogle, setLoadingGoogle] = useState(false)
+  const [loadingPw, setLoadingPw] = useState(false)
   const [loadingOtp, setLoadingOtp] = useState(false)
   const [loadingVerify, setLoadingVerify] = useState(false)
 
-  async function afterSupabaseAuth(userId: string, userEmail: string, name?: string) {
+  async function redirectAfterAuth(userId: string, userEmail: string, phone?: string, name?: string) {
     await supabase.from('users').upsert(
       {
         id: userId,
         email: userEmail,
-        ...(mobile ? { phone: `+91${mobile}` } : {}),
+        ...(phone ? { phone } : {}),
         ...(name ? { name } : {}),
         onboarding_complete: false,
       },
@@ -60,6 +90,8 @@ export default function SignupPage() {
       .maybeSingle()
     router.push(user?.onboarding_complete ? '/dashboard' : '/onboarding/profile')
   }
+
+  // ── Google ──────────────────────────────────────────────────────────────────
 
   async function handleGoogle() {
     setLoadingGoogle(true)
@@ -88,7 +120,7 @@ export default function SignupPage() {
       }
 
       if (!userId) throw new Error('Authentication failed.')
-      await afterSupabaseAuth(userId, firebaseEmail, displayName ?? undefined)
+      await redirectAfterAuth(userId, firebaseEmail, undefined, displayName ?? undefined)
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Google sign-in failed.'
       toast({ title: 'Error', description: message, variant: 'destructive' })
@@ -97,12 +129,52 @@ export default function SignupPage() {
     }
   }
 
+  // ── Password signup ─────────────────────────────────────────────────────────
+
+  function validatePw() {
+    const e: Record<string, string> = {}
+    if (!isEmail(email)) e.email = 'Enter a valid email address.'
+    if (!isValidMobile(mobile)) e.mobile = 'Enter a valid 10-digit Indian mobile number.'
+    if (!isPasswordStrong(password)) e.password = 'Password does not meet all requirements.'
+    if (!confirm) e.confirm = 'Please confirm your password.'
+    else if (password !== confirm) e.confirm = 'Passwords do not match.'
+    setPwErrors(e)
+    return Object.keys(e).length === 0
+  }
+
+  async function handlePasswordSignup(e: React.FormEvent) {
+    e.preventDefault()
+    if (!validatePw()) return
+    setLoadingPw(true)
+    try {
+      const { data, error } = await supabase.auth.signUp({ email: email.trim(), password })
+      if (error) throw error
+      const userId = data.user?.id
+      if (!userId) throw new Error('Signup failed.')
+      if (data.session) {
+        await redirectAfterAuth(userId, email.trim(), `+91${mobile}`)
+      } else {
+        toast({ title: 'Almost there!', description: 'Check your email and click the link to verify your account.' })
+        router.push('/login?verified=pending')
+      }
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Sign up failed.'
+      toast({ title: 'Sign up failed', description: message, variant: 'destructive' })
+    } finally {
+      setLoadingPw(false)
+    }
+  }
+
+  function clearPwError(field: string) {
+    if (pwErrors[field]) setPwErrors((e) => { const n = { ...e }; delete n[field]; return n })
+  }
+
+  // ── OTP signup ──────────────────────────────────────────────────────────────
+
   function validateOtpForm() {
     let valid = true
-    if (!isEmail(email)) { setEmailError('Enter a valid email address.'); valid = false }
-    else setEmailError('')
-    if (!/^[6-9]\d{9}$/.test(mobile)) { setMobileError('Enter a valid 10-digit Indian mobile number.'); valid = false }
-    else setMobileError('')
+    if (!isEmail(otpEmail)) { setOtpEmailError('Enter a valid email address.'); valid = false } else setOtpEmailError('')
+    if (!isValidMobile(otpMobile)) { setOtpMobileError('Enter a valid 10-digit Indian mobile number.'); valid = false } else setOtpMobileError('')
     return valid
   }
 
@@ -111,10 +183,10 @@ export default function SignupPage() {
     if (!validateOtpForm()) return
     setLoadingOtp(true)
     try {
-      const { error } = await supabase.auth.signInWithOtp({ email: email.trim() })
+      const { error } = await supabase.auth.signInWithOtp({ email: otpEmail.trim() })
       if (error) throw error
-      setStep('otp')
-      toast({ title: 'Code sent', description: `Check ${email} for a 6-digit code.` })
+      setMode('otp-verify')
+      toast({ title: 'Code sent', description: `Check ${otpEmail} for a 6-digit code.` })
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Could not send code.'
       toast({ title: 'Error', description: message, variant: 'destructive' })
@@ -130,14 +202,14 @@ export default function SignupPage() {
     setLoadingVerify(true)
     try {
       const { data, error } = await supabase.auth.verifyOtp({
-        email: email.trim(),
+        email: otpEmail.trim(),
         token: otp.trim(),
         type: 'email',
       })
       if (error) throw error
       const userId = data.user?.id
       if (!userId) throw new Error('Verification failed.')
-      await afterSupabaseAuth(userId, email.trim())
+      await redirectAfterAuth(userId, otpEmail.trim(), `+91${otpMobile}`)
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Verification failed.'
       const friendly = message.includes('invalid') || message.includes('expired')
@@ -159,7 +231,99 @@ export default function SignupPage() {
       </Link>
 
       <div className="w-full max-w-sm bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
-        {step === 'main' ? (
+
+        {/* ── OTP verify ── */}
+        {mode === 'otp-verify' ? (
+          <>
+            <div className="mb-6 text-center">
+              <h1 className="text-xl font-bold text-gray-900">Verify your email</h1>
+              <p className="mt-1.5 text-sm text-gray-500">
+                We sent a 6-digit code to <span className="font-medium text-gray-700">{otpEmail}</span>
+              </p>
+            </div>
+            <form onSubmit={handleVerifyOtp} noValidate className="flex flex-col gap-4">
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="otp" className="text-sm font-medium text-gray-700">6-digit code</label>
+                <input
+                  id="otp"
+                  type="text"
+                  inputMode="numeric"
+                  pattern="\d*"
+                  maxLength={6}
+                  autoComplete="one-time-code"
+                  placeholder="123456"
+                  value={otp}
+                  onChange={(e) => { setOtp(e.target.value.replace(/\D/g, '')); if (otpError) setOtpError('') }}
+                  className={`rounded-xl border-2 px-3.5 py-3 text-sm text-gray-900 placeholder-gray-400 outline-none transition-all tracking-[0.3em] text-center focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 ${otpError ? 'border-red-400' : 'border-gray-200'}`}
+                />
+                {otpError && <p className="text-xs text-red-600">{otpError}</p>}
+              </div>
+              <button type="submit" disabled={loadingVerify}
+                className="flex items-center justify-center gap-2 rounded-xl bg-amber-500 py-3.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-amber-600 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed">
+                {loadingVerify && <Loader2 className="h-4 w-4 animate-spin" />}
+                Verify & create account
+              </button>
+              <button type="button" onClick={() => { setMode('otp-email'); setOtp(''); setOtpError('') }}
+                className="text-sm text-center text-gray-500 hover:text-gray-700 transition-colors">
+                ← Use a different email
+              </button>
+            </form>
+          </>
+        ) : mode === 'otp-email' ? (
+          /* ── OTP email+mobile entry ── */
+          <>
+            <div className="mb-6 text-center">
+              <h1 className="text-xl font-bold text-gray-900">Sign up with a code</h1>
+              <p className="mt-1.5 text-sm text-gray-500">We&apos;ll send a 6-digit code to verify your email</p>
+            </div>
+            <form onSubmit={handleSendOtp} noValidate className="flex flex-col gap-4">
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="otpEmail" className="text-sm font-medium text-gray-700">
+                  Email address <span className="text-red-500">*</span>
+                </label>
+                <input
+                  id="otpEmail"
+                  type="email"
+                  autoComplete="email"
+                  placeholder="you@example.com"
+                  value={otpEmail}
+                  onChange={(e) => { setOtpEmail(e.target.value); if (otpEmailError) setOtpEmailError('') }}
+                  className={`rounded-xl border-2 px-3.5 py-3 text-sm text-gray-900 placeholder-gray-400 outline-none transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 ${otpEmailError ? 'border-red-400' : 'border-gray-200'}`}
+                />
+                {otpEmailError && <p className="text-xs text-red-600">{otpEmailError}</p>}
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="otpMobile" className="text-sm font-medium text-gray-700">
+                  Mobile number <span className="text-red-500">*</span>
+                </label>
+                <div className={`flex rounded-xl border-2 overflow-hidden transition-all focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-100 ${otpMobileError ? 'border-red-400' : 'border-gray-200'}`}>
+                  <span className="flex items-center bg-gray-50 px-3.5 text-sm font-medium text-gray-500 border-r border-gray-200 select-none">+91</span>
+                  <input
+                    id="otpMobile"
+                    type="tel"
+                    inputMode="numeric"
+                    maxLength={10}
+                    placeholder="98765 43210"
+                    value={otpMobile}
+                    onChange={(e) => { setOtpMobile(e.target.value.replace(/\D/g, '').slice(0, 10)); if (otpMobileError) setOtpMobileError('') }}
+                    className="flex-1 bg-white px-3.5 py-3 text-sm text-gray-900 placeholder-gray-400 outline-none"
+                  />
+                </div>
+                {otpMobileError && <p className="text-xs text-red-600">{otpMobileError}</p>}
+              </div>
+              <button type="submit" disabled={loadingOtp}
+                className="flex items-center justify-center gap-2 rounded-xl bg-amber-500 py-3.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-amber-600 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed">
+                {loadingOtp ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
+                Send verification code
+              </button>
+              <button type="button" onClick={() => setMode('password')}
+                className="text-sm text-center text-gray-500 hover:text-gray-700 transition-colors">
+                ← Sign up with password instead
+              </button>
+            </form>
+          </>
+        ) : (
+          /* ── Password signup (default) ── */
           <>
             <div className="mb-6 text-center">
               <h1 className="text-xl font-bold text-gray-900">Create your account</h1>
@@ -181,7 +345,7 @@ export default function SignupPage() {
               <div className="flex-1 h-px bg-gray-200" />
             </div>
 
-            <form onSubmit={handleSendOtp} noValidate className="flex flex-col gap-4">
+            <form onSubmit={handlePasswordSignup} noValidate className="flex flex-col gap-4">
               <div className="flex flex-col gap-1.5">
                 <label htmlFor="email" className="text-sm font-medium text-gray-700">
                   Email address <span className="text-red-500">*</span>
@@ -192,17 +356,17 @@ export default function SignupPage() {
                   autoComplete="email"
                   placeholder="you@example.com"
                   value={email}
-                  onChange={(e) => { setEmail(e.target.value); if (emailError) setEmailError('') }}
-                  className={`rounded-xl border-2 px-3.5 py-3 text-sm text-gray-900 placeholder-gray-400 outline-none transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 ${emailError ? 'border-red-400' : 'border-gray-200'}`}
+                  onChange={(e) => { setEmail(e.target.value); clearPwError('email') }}
+                  className={`rounded-xl border-2 px-3.5 py-3 text-sm text-gray-900 placeholder-gray-400 outline-none transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 ${pwErrors.email ? 'border-red-400' : 'border-gray-200'}`}
                 />
-                {emailError && <p className="text-xs text-red-600">{emailError}</p>}
+                {pwErrors.email && <p className="text-xs text-red-600">{pwErrors.email}</p>}
               </div>
 
               <div className="flex flex-col gap-1.5">
                 <label htmlFor="mobile" className="text-sm font-medium text-gray-700">
                   Mobile number <span className="text-red-500">*</span>
                 </label>
-                <div className={`flex rounded-xl border-2 overflow-hidden transition-all focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-100 ${mobileError ? 'border-red-400' : 'border-gray-200'}`}>
+                <div className={`flex rounded-xl border-2 overflow-hidden transition-all focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-100 ${pwErrors.mobile ? 'border-red-400' : 'border-gray-200'}`}>
                   <span className="flex items-center bg-gray-50 px-3.5 text-sm font-medium text-gray-500 border-r border-gray-200 select-none">+91</span>
                   <input
                     id="mobile"
@@ -211,63 +375,93 @@ export default function SignupPage() {
                     maxLength={10}
                     placeholder="98765 43210"
                     value={mobile}
-                    onChange={(e) => { setMobile(e.target.value.replace(/\D/g, '').slice(0, 10)); if (mobileError) setMobileError('') }}
+                    onChange={(e) => { setMobile(e.target.value.replace(/\D/g, '').slice(0, 10)); clearPwError('mobile') }}
                     className="flex-1 bg-white px-3.5 py-3 text-sm text-gray-900 placeholder-gray-400 outline-none"
                   />
                 </div>
-                {mobileError && <p className="text-xs text-red-600">{mobileError}</p>}
+                {pwErrors.mobile && <p className="text-xs text-red-600">{pwErrors.mobile}</p>}
               </div>
 
-              <button type="submit" disabled={loadingOtp}
-                className="flex items-center justify-center gap-2 rounded-xl bg-amber-500 py-3.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-amber-600 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed">
-                {loadingOtp ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
-                Send verification code
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="password" className="text-sm font-medium text-gray-700">
+                  Password <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    autoComplete="new-password"
+                    placeholder="Create a strong password"
+                    value={password}
+                    onChange={(e) => { setPassword(e.target.value); clearPwError('password') }}
+                    onFocus={() => setPasswordFocused(true)}
+                    onBlur={() => setPasswordFocused(false)}
+                    className={`w-full rounded-xl border-2 px-3.5 py-3 pr-11 text-sm text-gray-900 placeholder-gray-400 outline-none transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 ${pwErrors.password ? 'border-red-400' : 'border-gray-200'}`}
+                  />
+                  <button type="button" onClick={() => setShowPassword((v) => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600" tabIndex={-1}>
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+                {(passwordFocused || password.length > 0) && (
+                  <ul className="mt-1 flex flex-col gap-1">
+                    {PASSWORD_RULES.map((rule) => {
+                      const met = rule.test(password)
+                      return (
+                        <li key={rule.label} className={`flex items-center gap-1.5 text-xs ${met ? 'text-green-600' : 'text-gray-400'}`}>
+                          <span className={`inline-block h-1.5 w-1.5 rounded-full ${met ? 'bg-green-500' : 'bg-gray-300'}`} />
+                          {rule.label}
+                        </li>
+                      )
+                    })}
+                  </ul>
+                )}
+                {pwErrors.password && <p className="text-xs text-red-600">{pwErrors.password}</p>}
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="confirm" className="text-sm font-medium text-gray-700">
+                  Confirm password <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <input
+                    id="confirm"
+                    type={showConfirm ? 'text' : 'password'}
+                    autoComplete="new-password"
+                    placeholder="Repeat your password"
+                    value={confirm}
+                    onChange={(e) => { setConfirm(e.target.value); clearPwError('confirm') }}
+                    className={`w-full rounded-xl border-2 px-3.5 py-3 pr-11 text-sm text-gray-900 placeholder-gray-400 outline-none transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 ${pwErrors.confirm ? 'border-red-400' : 'border-gray-200'}`}
+                  />
+                  <button type="button" onClick={() => setShowConfirm((v) => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600" tabIndex={-1}>
+                    {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+                {pwErrors.confirm && <p className="text-xs text-red-600">{pwErrors.confirm}</p>}
+              </div>
+
+              <button type="submit" disabled={loadingPw}
+                className="mt-1 flex items-center justify-center gap-2 rounded-xl bg-amber-500 py-3.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-amber-600 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed">
+                {loadingPw && <Loader2 className="h-4 w-4 animate-spin" />}
+                Create account
               </button>
             </form>
 
-            <p className="mt-5 text-center text-sm text-gray-500">
+            <div className="mt-4 text-center">
+              <button
+                type="button"
+                onClick={() => setMode('otp-email')}
+                className="text-sm text-indigo-600 hover:text-indigo-700 font-medium transition-colors"
+              >
+                Sign up with email code instead
+              </button>
+            </div>
+
+            <p className="mt-4 text-center text-sm text-gray-500">
               Already have an account?{' '}
               <Link href="/login" className="font-medium text-indigo-600 hover:text-indigo-700">Log in</Link>
             </p>
-          </>
-        ) : (
-          <>
-            <div className="mb-6 text-center">
-              <h1 className="text-xl font-bold text-gray-900">Verify your email</h1>
-              <p className="mt-1.5 text-sm text-gray-500">
-                We sent a 6-digit code to <span className="font-medium text-gray-700">{email}</span>
-              </p>
-            </div>
-
-            <form onSubmit={handleVerifyOtp} noValidate className="flex flex-col gap-4">
-              <div className="flex flex-col gap-1.5">
-                <label htmlFor="otp" className="text-sm font-medium text-gray-700">6-digit code</label>
-                <input
-                  id="otp"
-                  type="text"
-                  inputMode="numeric"
-                  pattern="\d*"
-                  maxLength={6}
-                  autoComplete="one-time-code"
-                  placeholder="123456"
-                  value={otp}
-                  onChange={(e) => { setOtp(e.target.value.replace(/\D/g, '')); if (otpError) setOtpError('') }}
-                  className={`rounded-xl border-2 px-3.5 py-3 text-sm text-gray-900 placeholder-gray-400 outline-none transition-all tracking-[0.3em] text-center focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 ${otpError ? 'border-red-400' : 'border-gray-200'}`}
-                />
-                {otpError && <p className="text-xs text-red-600">{otpError}</p>}
-              </div>
-
-              <button type="submit" disabled={loadingVerify}
-                className="flex items-center justify-center gap-2 rounded-xl bg-amber-500 py-3.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-amber-600 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed">
-                {loadingVerify && <Loader2 className="h-4 w-4 animate-spin" />}
-                Verify & create account
-              </button>
-
-              <button type="button" onClick={() => { setStep('main'); setOtp(''); setOtpError('') }}
-                className="text-sm text-gray-500 hover:text-gray-700 transition-colors">
-                ← Use a different email
-              </button>
-            </form>
           </>
         )}
       </div>
