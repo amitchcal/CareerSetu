@@ -9,8 +9,8 @@ export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
-    clean(process.env.NEXT_PUBLIC_SUPABASE_URL, 'https://placeholder.supabase.co'),
-    clean(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY, 'placeholder-anon-key'),
+    const url = clean(process.env.NEXT_PUBLIC_SUPABASE_URL, 'https://bnxshcckbasylmvbsagc.supabase.co')
+const anonKey = clean(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY, 'eyJhbGci••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••')
     {
       cookies: {
         getAll() {
