@@ -8,8 +8,8 @@ function clean(s: string | undefined, fallback: string): string {
 export function createSupabaseServerClient() {
   const cookieStore = cookies()
   return createServerClient(
-    clean(process.env.NEXT_PUBLIC_SUPABASE_URL, 'https://placeholder.supabase.co'),
-    clean(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY, 'placeholder-anon-key'),
+  clean(process.env.NEXT_PUBLIC_SUPABASE_URL, 'https://bnxshcckbasylmvbsagc.supabase.co'),
+clean(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY, 'eyJhbGci••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••'),
     {
       cookies: {
         getAll() {
