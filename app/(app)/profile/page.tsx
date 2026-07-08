@@ -2,9 +2,9 @@
 
 export const dynamic = 'force-dynamic'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Loader2, Eye, EyeOff, CheckCircle, Suspense } from 'lucide-react'
+import { Loader2, Eye, EyeOff, CheckCircle } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { toast } from '@/hooks/useToast'
 import RoleSelect, { DEFAULT_ROLES } from '@/components/shared/RoleSelect'
