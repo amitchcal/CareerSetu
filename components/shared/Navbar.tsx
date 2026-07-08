@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Menu, X, Briefcase, ChevronDown, User, CreditCard, LogOut, LayoutDashboard } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { Menu, X, Briefcase, ChevronDown, User, CreditCard, LogOut, LayoutDashboard, KeyRound } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -13,6 +14,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
+import { supabase } from '@/lib/supabase'
 
 interface NavbarProps {
   isLoggedIn?: boolean
@@ -24,7 +26,13 @@ interface NavbarProps {
 }
 
 export default function Navbar({ isLoggedIn = false, user }: NavbarProps) {
+  const router = useRouter()
   const [mobileOpen, setMobileOpen] = useState(false)
+
+  async function handleSignOut() {
+    await supabase.auth.signOut()
+    router.push('/login')
+  }
 
   const navLinks = isLoggedIn
     ? [{ href: '/dashboard', label: 'Dashboard', icon: <LayoutDashboard className="h-4 w-4" /> }]
@@ -82,11 +90,17 @@ export default function Navbar({ isLoggedIn = false, user }: NavbarProps) {
                     <ChevronDown className="h-3.5 w-3.5 text-gray-400" />
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuContent align="end" className="w-52">
                   <DropdownMenuItem asChild>
                     <Link href="/profile" className="flex items-center gap-2">
                       <User className="h-4 w-4" />
-                      Profile
+                      Edit Profile
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/profile?tab=password" className="flex items-center gap-2">
+                      <KeyRound className="h-4 w-4" />
+                      Change Password
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
@@ -96,11 +110,12 @@ export default function Navbar({ isLoggedIn = false, user }: NavbarProps) {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <Link href="/auth/logout" className="flex items-center gap-2 text-red-600">
-                      <LogOut className="h-4 w-4" />
-                      Logout
-                    </Link>
+                  <DropdownMenuItem
+                    onClick={handleSignOut}
+                    className="flex items-center gap-2 text-red-600 cursor-pointer focus:text-red-600"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    Sign out
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -162,7 +177,15 @@ export default function Navbar({ isLoggedIn = false, user }: NavbarProps) {
                         className="flex items-center gap-2 rounded-md px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
                       >
                         <User className="h-4 w-4" />
-                        Profile
+                        Edit Profile
+                      </Link>
+                      <Link
+                        href="/profile?tab=password"
+                        onClick={() => setMobileOpen(false)}
+                        className="flex items-center gap-2 rounded-md px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                      >
+                        <KeyRound className="h-4 w-4" />
+                        Change Password
                       </Link>
                       <Link
                         href="/subscription"
@@ -172,14 +195,13 @@ export default function Navbar({ isLoggedIn = false, user }: NavbarProps) {
                         <CreditCard className="h-4 w-4" />
                         Subscription
                       </Link>
-                      <Link
-                        href="/auth/logout"
-                        onClick={() => setMobileOpen(false)}
-                        className="flex items-center gap-2 rounded-md px-3 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50"
+                      <button
+                        onClick={() => { setMobileOpen(false); handleSignOut() }}
+                        className="flex items-center gap-2 rounded-md px-3 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 w-full text-left"
                       >
                         <LogOut className="h-4 w-4" />
-                        Logout
-                      </Link>
+                        Sign out
+                      </button>
                     </>
                   ) : (
                     <>
