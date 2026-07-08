@@ -5,14 +5,12 @@ import Link from 'next/link'
 import { Loader2, Eye, EyeOff } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { toast } from '@/hooks/useToast'
-import { useRouter } from 'next/navigation'
 
 interface Props {
   mode: 'signup' | 'login'
 }
 
 export default function GoogleAuthButton({ mode }: Props) {
-  const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
   const [email, setEmail] = useState('')
@@ -55,7 +53,7 @@ export default function GoogleAuthButton({ mode }: Props) {
         const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim(), password })
         if (error) throw error
         const { isNew } = await ensureUserRow(data.user.id, data.user.email ?? '', null)
-        router.replace(isNew ? '/onboarding/profile' : '/dashboard')
+        window.location.href = isNew ? '/onboarding/profile' : '/dashboard'
       } else {
         const { data, error } = await supabase.auth.signUp({
           email: email.trim(),
@@ -64,13 +62,12 @@ export default function GoogleAuthButton({ mode }: Props) {
         })
         if (error) throw error
         if (!data.session) {
-          // "Confirm email" is still ON in Supabase — ask them to disable it.
           toast({ title: 'Almost there', description: 'Confirm your email from your inbox, then log in with your password.' })
           setLoading(false)
           return
         }
         await ensureUserRow(data.user!.id, data.user!.email ?? '', name.trim())
-        router.replace('/onboarding/profile')
+        window.location.href = '/onboarding/profile'
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Something went wrong.'
