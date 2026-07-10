@@ -1,0 +1,567 @@
+diff --git a/app/api/admin/questions/generate/route.ts b/app/api/admin/questions/generate/route.ts
+index 37b96cb..bfcdcfe 100644
+--- a/app/api/admin/questions/generate/route.ts
++++ b/app/api/admin/questions/generate/route.ts
+@@ -1,4 +1,4 @@
+-﻿import { NextRequest, NextResponse } from 'next/server'
++import { NextRequest, NextResponse } from 'next/server'
+ import { supabaseAdmin } from '@/lib/supabase-admin'
+ import { anthropic } from '@/lib/anthropic'
+ import { getAdminUser } from '@/lib/admin'
+@@ -82,7 +82,7 @@ ${shape}`
+       messages: [{ role: 'user', content: prompt }],
+     })
+ 
+-    const raw = message.content[0].type === 'text' ? message.content[0].text.trim() : ''
++    const raw = message.content[0]?.type === 'text' ? message.content[0].text.trim() : ''
+     const jsonText = raw.replace(/^```(?:json)?/i, '').replace(/```$/i, '').trim()
+ 
+     let items: unknown
+@@ -152,7 +152,7 @@ ${shape}`
+ 
+     if (insErr) {
+       console.error('[admin/questions/generate] insert:', insErr)
+-      return NextResponse.json({ error: insErr.message }, { status: 500 })
++      return NextResponse.json({ error: 'Could not save generated questions.' }, { status: 500 })
+     }
+ 
+     return NextResponse.json({ generated: inserted?.length ?? 0 })
+diff --git a/app/api/admin/questions/review/route.ts b/app/api/admin/questions/review/route.ts
+index fd84192..1894c29 100644
+--- a/app/api/admin/questions/review/route.ts
++++ b/app/api/admin/questions/review/route.ts
+@@ -1,4 +1,4 @@
+-﻿import { NextRequest, NextResponse } from 'next/server'
++import { NextRequest, NextResponse } from 'next/server'
+ import { supabaseAdmin } from '@/lib/supabase-admin'
+ import { getAdminUser } from '@/lib/admin'
+ 
+diff --git a/app/api/coding/run/route.ts b/app/api/coding/run/route.ts
+index 0c4c566..b83919e 100644
+--- a/app/api/coding/run/route.ts
++++ b/app/api/coding/run/route.ts
+@@ -1,4 +1,4 @@
+-﻿import { NextRequest, NextResponse } from 'next/server'
++import { NextRequest, NextResponse } from 'next/server'
+ import { createSupabaseServerClient } from '@/lib/supabase-server'
+ import { supabaseAdmin } from '@/lib/supabase-admin'
+ import { runCode, CODE_LANGUAGES } from '@/lib/coderunner'
+diff --git a/app/api/cv-analyzer/route.ts b/app/api/cv-analyzer/route.ts
+index ee7eb28..082c7a7 100644
+--- a/app/api/cv-analyzer/route.ts
++++ b/app/api/cv-analyzer/route.ts
+@@ -78,7 +78,7 @@ Return ONLY valid JSON in this exact shape, no markdown, no preamble:
+       messages: [{ role: 'user', content: prompt }],
+     })
+ 
+-    const raw = message.content[0].type === 'text' ? message.content[0].text : ''
++    const raw = message.content[0]?.type === 'text' ? message.content[0].text : ''
+     const jsonText = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim()
+     const result = JSON.parse(jsonText)
+ 
+diff --git a/app/api/cv/parse/route.ts b/app/api/cv/parse/route.ts
+index 4b2ab61..9dd453b 100644
+--- a/app/api/cv/parse/route.ts
++++ b/app/api/cv/parse/route.ts
+@@ -57,7 +57,7 @@ Return this exact JSON shape:
+       }],
+     })
+ 
+-    const raw = message.content[0].type === 'text' ? message.content[0].text : ''
++    const raw = message.content[0]?.type === 'text' ? message.content[0].text : ''
+     const parsed = JSON.parse(raw)
+     parsed.cvText = cvText.slice(0, 8000)
+ 
+diff --git a/app/api/demo/feedback/route.ts b/app/api/demo/feedback/route.ts
+index d756f16..d7fa562 100644
+--- a/app/api/demo/feedback/route.ts
++++ b/app/api/demo/feedback/route.ts
+@@ -32,7 +32,7 @@ Return ONLY valid JSON, no markdown:
+ }`,
+       }],
+     })
+-    const raw = msg.content[0].type === 'text' ? msg.content[0].text.trim() : ''
++    const raw = msg.content[0]?.type === 'text' ? msg.content[0].text.trim() : ''
+     const parsed = JSON.parse(raw.replace(/^```(?:json)?/i, '').replace(/```$/i, '').trim())
+     return NextResponse.json({
+       score: parsed.score,
+diff --git a/app/api/demo/question/route.ts b/app/api/demo/question/route.ts
+index c12bf05..ccab990 100644
+--- a/app/api/demo/question/route.ts
++++ b/app/api/demo/question/route.ts
+@@ -17,7 +17,7 @@ It should be answerable in 60-90 seconds and suitable for an entry-to-mid level
+ Output ONLY the question text, no preamble, no numbering.`,
+       }],
+     })
+-    const question = msg.content[0].type === 'text' ? msg.content[0].text.trim() : ''
++    const question = msg.content[0]?.type === 'text' ? msg.content[0].text.trim() : ''
+     if (!question) return NextResponse.json({ error: 'Could not generate a question.' }, { status: 500 })
+     return NextResponse.json({ question })
+   } catch (err: unknown) {
+diff --git a/app/api/interview/[sessionId]/answer/route.ts b/app/api/interview/[sessionId]/answer/route.ts
+index ea60f9f..0b36792 100644
+--- a/app/api/interview/[sessionId]/answer/route.ts
++++ b/app/api/interview/[sessionId]/answer/route.ts
+@@ -137,7 +137,7 @@ Generate ONE follow-up interview question (question ${questionNumber + 1} of ${s
+       ],
+     })
+ 
+-    const nextQuestion = msg.content[0].type === 'text' ? msg.content[0].text.trim() : ''
++    const nextQuestion = msg.content[0]?.type === 'text' ? msg.content[0].text.trim() : ''
+ 
+     // Store next question
+     await supabase.from('session_questions').insert({
+diff --git a/app/api/interview/[sessionId]/feedback/route.ts b/app/api/interview/[sessionId]/feedback/route.ts
+index c8e4cfb..1bad39d 100644
+--- a/app/api/interview/[sessionId]/feedback/route.ts
++++ b/app/api/interview/[sessionId]/feedback/route.ts
+@@ -68,7 +68,7 @@ Return ONLY valid JSON in this exact shape, no markdown, no preamble:
+       ],
+     })
+ 
+-    const raw = msg.content[0].type === 'text' ? msg.content[0].text.trim() : ''
++    const raw = msg.content[0]?.type === 'text' ? msg.content[0].text.trim() : ''
+     const jsonText = raw.replace(/^```(?:json)?/i, '').replace(/```$/i, '').trim()
+     const parsed = JSON.parse(jsonText)
+ 
+diff --git a/app/api/interview/sample/feedback/route.ts b/app/api/interview/sample/feedback/route.ts
+index 2d83d2d..59f557c 100644
+--- a/app/api/interview/sample/feedback/route.ts
++++ b/app/api/interview/sample/feedback/route.ts
+@@ -90,7 +90,7 @@ Give ONE or TWO sentences of honest, specific, encouraging feedback — highligh
+     })
+ 
+     const feedback =
+-      message.content[0].type === 'text' ? message.content[0].text.trim() : ''
++      message.content[0]?.type === 'text' ? message.content[0].text.trim() : ''
+ 
+     return NextResponse.json({ transcript, feedback })
+   } catch (err: unknown) {
+diff --git a/app/api/interview/sample/route.ts b/app/api/interview/sample/route.ts
+index 2b8fecb..59b3b72 100644
+--- a/app/api/interview/sample/route.ts
++++ b/app/api/interview/sample/route.ts
+@@ -24,7 +24,7 @@ Requirements:
+     })
+ 
+     const question =
+-      message.content[0].type === 'text' ? message.content[0].text.trim() : ''
++      message.content[0]?.type === 'text' ? message.content[0].text.trim() : ''
+ 
+     if (!question) {
+       return NextResponse.json({ error: 'Failed to generate question' }, { status: 500 })
+diff --git a/app/api/interview/start/route.ts b/app/api/interview/start/route.ts
+index c1d6c23..88ec831 100644
+--- a/app/api/interview/start/route.ts
++++ b/app/api/interview/start/route.ts
+@@ -1,7 +1,8 @@
+-﻿import { NextRequest, NextResponse } from 'next/server'
++import { NextRequest, NextResponse } from 'next/server'
+ import { supabaseAdmin } from '@/lib/supabase-admin'
+ import { anthropic } from '@/lib/anthropic'
+ import { buildInterviewContext, isSenior } from '@/lib/interview-prompt'
++import { getAuthedUser } from '@/lib/auth'
+ 
+ function toDifficulty(seniority: string): string {
+   return seniority === 'lead' ? 'experienced' : seniority
+@@ -9,13 +10,16 @@ function toDifficulty(seniority: string): string {
+ 
+ export async function POST(req: NextRequest) {
+   try {
++    const user = await getAuthedUser()
++    if (!user) return NextResponse.json({ error: 'Unauthorised.' }, { status: 401 })
++
+     const body = await req.json()
+     const {
+-      userId, trackId, companyId, roundType, seniority,
++      trackId, companyId, roundType, seniority,
+       language, numQuestions, jobTitle, jobDescription, resumeText,
+     } = body
+ 
+-    if (!userId || !trackId || !seniority || !language || !numQuestions) {
++    if (!trackId || !seniority || !language || !numQuestions) {
+       return NextResponse.json({ error: 'Missing required fields.' }, { status: 400 })
+     }
+     if (isSenior(seniority) && !jobDescription?.trim()) {
+@@ -53,7 +57,7 @@ export async function POST(req: NextRequest) {
+     const { data: session, error: sessionErr } = await supabase
+       .from('sessions')
+       .insert({
+-        user_id: userId, role, difficulty, language, num_questions: numQuestions, status: 'in_progress',
++        user_id: user.id, role, difficulty, language, num_questions: numQuestions, status: 'in_progress',
+         track_id: trackId, company_id: companyId ?? null, round_type: roundType ?? null,
+         seniority, job_title: jobTitle?.trim() || null, job_description: jobDescription?.trim() || null,
+         resume_snapshot: resumeSnapshot,
+@@ -63,7 +67,7 @@ export async function POST(req: NextRequest) {
+ 
+     if (sessionErr || !session) {
+       console.error('[interview/start] session insert:', sessionErr)
+-      return NextResponse.json({ error: 'Could not create session.', detail: sessionErr?.message }, { status: 500 })
++      return NextResponse.json({ error: 'Could not create session.' }, { status: 500 })
+     }
+     const sessionId = session.id
+ 
+@@ -86,7 +90,7 @@ Requirements:
+       }],
+     })
+ 
+-    const firstQuestion = message.content[0].type === 'text' ? message.content[0].text.trim() : ''
++    const firstQuestion = message.content[0]?.type === 'text' ? message.content[0].text.trim() : ''
+     if (!firstQuestion) return NextResponse.json({ error: 'Failed to generate first question.' }, { status: 500 })
+ 
+     const { error: qErr } = await supabase.from('session_questions').insert({
+diff --git a/app/api/jobs/search/route.ts b/app/api/jobs/search/route.ts
+index 7a4dc06..6d48767 100644
+--- a/app/api/jobs/search/route.ts
++++ b/app/api/jobs/search/route.ts
+@@ -64,7 +64,7 @@ Return this exact JSON array (one entry per job, in order):
+     }],
+   })
+ 
+-  const raw = message.content[0].type === 'text' ? message.content[0].text : '[]'
++  const raw = message.content[0]?.type === 'text' ? message.content[0].text : '[]'
+   const jsonText = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim()
+   const scores: Array<{ jobIndex: number; matchScore: number; matchedSkills: string[]; missingSkills: string[] }> = JSON.parse(jsonText || '[]')
+ 
+diff --git a/app/api/jobs/tailor/route.ts b/app/api/jobs/tailor/route.ts
+index 495355f..1583535 100644
+--- a/app/api/jobs/tailor/route.ts
++++ b/app/api/jobs/tailor/route.ts
+@@ -63,7 +63,7 @@ Return ONLY valid JSON, no markdown:
+       }],
+     })
+ 
+-    const raw = message.content[0].type === 'text' ? message.content[0].text : ''
++    const raw = message.content[0]?.type === 'text' ? message.content[0].text : ''
+     const jsonText = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim()
+     const result = JSON.parse(jsonText)
+ 
+diff --git a/app/api/resume/[id]/route.ts b/app/api/resume/[id]/route.ts
+index 940e43b..cce279b 100644
+--- a/app/api/resume/[id]/route.ts
++++ b/app/api/resume/[id]/route.ts
+@@ -25,7 +25,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
+     .eq('id', params.id)
+     .eq('user_id', userId)
+ 
+-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
++  if (error) return NextResponse.json({ error: 'Could not load resume.' }, { status: 500 })
+   return NextResponse.json({ ok: true })
+ }
+ 
+@@ -40,6 +40,6 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
+     .eq('id', params.id)
+     .eq('user_id', userId)
+ 
+-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
++  if (error) return NextResponse.json({ error: 'Could not load resume.' }, { status: 500 })
+   return NextResponse.json({ ok: true })
+ }
+diff --git a/app/api/resume/route.ts b/app/api/resume/route.ts
+index 48b8a16..96642ac 100644
+--- a/app/api/resume/route.ts
++++ b/app/api/resume/route.ts
+@@ -1,39 +1,42 @@
+-﻿import { NextRequest, NextResponse } from 'next/server'
++import { NextResponse } from 'next/server'
+ import { supabaseAdmin } from '@/lib/supabase-admin'
++import { getAuthedUser } from '@/lib/auth'
+ 
+-// GET /api/resume?userId=xxx  — list user's resumes
+-export async function GET(req: NextRequest) {
+-  const userId = req.nextUrl.searchParams.get('userId')
+-  if (!userId) return NextResponse.json({ error: 'userId required' }, { status: 400 })
++// GET /api/resume — list the authenticated user's resumes
++export async function GET() {
++  const user = await getAuthedUser()
++  if (!user) return NextResponse.json({ error: 'Unauthorised.' }, { status: 401 })
+ 
+   const { data, error } = await supabaseAdmin
+     .from('resumes')
+     .select('id, title, is_default, created_at, updated_at')
+-    .eq('user_id', userId)
++    .eq('user_id', user.id)
+     .order('updated_at', { ascending: false })
+ 
+-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
++  if (error) return NextResponse.json({ error: 'Could not load resumes.' }, { status: 500 })
+   return NextResponse.json({ resumes: data })
+ }
+ 
+-// POST /api/resume  — create new resume
+-export async function POST(req: NextRequest) {
++// POST /api/resume — create a new resume for the authenticated user
++export async function POST(req: Request) {
++  const user = await getAuthedUser()
++  if (!user) return NextResponse.json({ error: 'Unauthorised.' }, { status: 401 })
++
+   const body = await req.json()
+-  const { userId, title = 'My Resume' } = body
+-  if (!userId) return NextResponse.json({ error: 'userId required' }, { status: 400 })
++  const title = typeof body?.title === 'string' && body.title.trim() ? body.title.trim() : 'My Resume'
+ 
+-  // Check if this is the user's first resume — auto-set as default
++  // First resume is auto-set as default
+   const { count } = await supabaseAdmin
+     .from('resumes')
+     .select('id', { count: 'exact', head: true })
+-    .eq('user_id', userId)
++    .eq('user_id', user.id)
+ 
+   const { data, error } = await supabaseAdmin
+     .from('resumes')
+-    .insert({ user_id: userId, title, is_default: count === 0 })
++    .insert({ user_id: user.id, title, is_default: count === 0 })
+     .select('id')
+     .single()
+ 
+-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
++  if (error) return NextResponse.json({ error: 'Could not create resume.' }, { status: 500 })
+   return NextResponse.json({ resumeId: data.id })
+ }
+diff --git a/app/api/subscription/order/route.ts b/app/api/subscription/order/route.ts
+index 0699648..c591291 100644
+--- a/app/api/subscription/order/route.ts
++++ b/app/api/subscription/order/route.ts
+@@ -1,4 +1,4 @@
+-﻿import { NextRequest, NextResponse } from 'next/server'
++import { NextRequest, NextResponse } from 'next/server'
+ import Razorpay from 'razorpay'
+ import { createSupabaseServerClient } from '@/lib/supabase-server'
+ 
+diff --git a/app/api/subscription/upgrade/route.ts b/app/api/subscription/upgrade/route.ts
+index 1877ece..250ef41 100644
+--- a/app/api/subscription/upgrade/route.ts
++++ b/app/api/subscription/upgrade/route.ts
+@@ -1,4 +1,4 @@
+-﻿import { NextRequest, NextResponse } from 'next/server'
++import { NextRequest, NextResponse } from 'next/server'
+ import { supabaseAdmin } from '@/lib/supabase-admin'
+ 
+ export async function POST(req: NextRequest) {
+@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
+ 
+     if (error) {
+       console.error('[subscription/upgrade]', error)
+-      return NextResponse.json({ error: error.message }, { status: 500 })
++      return NextResponse.json({ error: 'Could not upgrade subscription.' }, { status: 500 })
+     }
+ 
+     return NextResponse.json({ success: true })
+diff --git a/app/api/test/start/route.ts b/app/api/test/start/route.ts
+index af01080..ce47f4a 100644
+--- a/app/api/test/start/route.ts
++++ b/app/api/test/start/route.ts
+@@ -1,4 +1,4 @@
+-﻿import { NextRequest, NextResponse } from 'next/server'
++import { NextRequest, NextResponse } from 'next/server'
+ import { createSupabaseServerClient } from '@/lib/supabase-server'
+ import { supabaseAdmin } from '@/lib/supabase-admin'
+ 
+@@ -42,8 +42,12 @@ export async function POST(req: NextRequest) {
+       return NextResponse.json({ error: 'No approved questions match this selection yet.' }, { status: 404 })
+     }
+ 
+-    // Shuffle and take up to `length`
+-    const shuffled = [...pool].sort(() => Math.random() - 0.5)
++    // Shuffle (Fisher–Yates — unbiased) and take up to `length`
++    const shuffled = [...pool]
++    for (let i = shuffled.length - 1; i > 0; i--) {
++      const j = Math.floor(Math.random() * (i + 1))
++      ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
++    }
+     const picked = shuffled.slice(0, Math.min(length, shuffled.length))
+     const count = picked.length
+     const durationSeconds = count * SECONDS_PER_QUESTION
+diff --git a/app/api/tickets/[id]/route.ts b/app/api/tickets/[id]/route.ts
+index f249036..75f70df 100644
+--- a/app/api/tickets/[id]/route.ts
++++ b/app/api/tickets/[id]/route.ts
+@@ -44,7 +44,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
+     .select()
+     .single()
+ 
+-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
++  if (error) return NextResponse.json({ error: 'Could not update ticket.' }, { status: 500 })
+ 
+   if (status === 'closed' && data.email) {
+     await sendEmail(
+diff --git a/app/api/tickets/route.ts b/app/api/tickets/route.ts
+index ab66ca4..05b5e62 100644
+--- a/app/api/tickets/route.ts
++++ b/app/api/tickets/route.ts
+@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
+     .select()
+     .single()
+ 
+-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
++  if (error) return NextResponse.json({ error: 'Could not create ticket.' }, { status: 500 })
+ 
+   // Email to user
+   await sendEmail(
+@@ -90,6 +90,6 @@ export async function GET(req: NextRequest) {
+   if (status && status !== 'all') query = query.eq('status', status)
+ 
+   const { data, error } = await query
+-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
++  if (error) return NextResponse.json({ error: 'Could not load tickets.' }, { status: 500 })
+   return NextResponse.json({ tickets: data })
+ }
+diff --git a/app/api/video-interview/[sessionId]/answer/route.ts b/app/api/video-interview/[sessionId]/answer/route.ts
+index 97f9c90..c739967 100644
+--- a/app/api/video-interview/[sessionId]/answer/route.ts
++++ b/app/api/video-interview/[sessionId]/answer/route.ts
+@@ -130,7 +130,7 @@ Generate ONE follow-up interview question (question ${questionNumber + 1} of ${s
+       }],
+     })
+ 
+-    const nextQuestion = msg.content[0].type === 'text' ? msg.content[0].text.trim() : ''
++    const nextQuestion = msg.content[0]?.type === 'text' ? msg.content[0].text.trim() : ''
+ 
+     await supabase.from('session_questions').insert({
+       session_id: sessionId,
+diff --git a/app/api/video-interview/[sessionId]/feedback/route.ts b/app/api/video-interview/[sessionId]/feedback/route.ts
+index fdef48f..c2aa154 100644
+--- a/app/api/video-interview/[sessionId]/feedback/route.ts
++++ b/app/api/video-interview/[sessionId]/feedback/route.ts
+@@ -66,7 +66,7 @@ Return ONLY valid JSON in this exact shape, no markdown, no preamble:
+       }],
+     })
+ 
+-    const raw = msg.content[0].type === 'text' ? msg.content[0].text.trim() : ''
++    const raw = msg.content[0]?.type === 'text' ? msg.content[0].text.trim() : ''
+     const jsonText = raw.replace(/^```(?:json)?/i, '').replace(/```$/i, '').trim()
+     const parsed = JSON.parse(jsonText)
+ 
+diff --git a/app/api/video-interview/start/route.ts b/app/api/video-interview/start/route.ts
+index e6ef9f6..f2acd1c 100644
+--- a/app/api/video-interview/start/route.ts
++++ b/app/api/video-interview/start/route.ts
+@@ -1,7 +1,8 @@
+-﻿import { NextRequest, NextResponse } from 'next/server'
++import { NextRequest, NextResponse } from 'next/server'
+ import { supabaseAdmin } from '@/lib/supabase-admin'
+ import { anthropic } from '@/lib/anthropic'
+ import { buildInterviewContext, isSenior } from '@/lib/interview-prompt'
++import { getAuthedUser } from '@/lib/auth'
+ 
+ function toDifficulty(seniority: string): string {
+   return seniority === 'lead' ? 'experienced' : seniority
+@@ -9,13 +10,16 @@ function toDifficulty(seniority: string): string {
+ 
+ export async function POST(req: NextRequest) {
+   try {
++    const user = await getAuthedUser()
++    if (!user) return NextResponse.json({ error: 'Unauthorised.' }, { status: 401 })
++
+     const body = await req.json()
+     const {
+-      userId, trackId, companyId, roundType, seniority,
++      trackId, companyId, roundType, seniority,
+       language, numQuestions, jobTitle, jobDescription, resumeText,
+     } = body
+ 
+-    if (!userId || !trackId || !seniority || !language || !numQuestions) {
++    if (!trackId || !seniority || !language || !numQuestions) {
+       return NextResponse.json({ error: 'Missing required fields.' }, { status: 400 })
+     }
+     if (isSenior(seniority) && !jobDescription?.trim()) {
+@@ -48,7 +52,7 @@ export async function POST(req: NextRequest) {
+     const { data: session, error: sessionErr } = await supabase
+       .from('sessions')
+       .insert({
+-        user_id: userId, role, difficulty, language, num_questions: numQuestions, status: 'in_progress',
++        user_id: user.id, role, difficulty, language, num_questions: numQuestions, status: 'in_progress',
+         track_id: trackId, company_id: companyId ?? null, round_type: roundType ?? null,
+         seniority, job_title: jobTitle?.trim() || null, job_description: jobDescription?.trim() || null,
+         resume_snapshot: resumeSnapshot,
+@@ -59,7 +63,7 @@ export async function POST(req: NextRequest) {
+ 
+     if (sessionErr || !session) {
+       console.error('[video-interview/start] session insert:', sessionErr)
+-      return NextResponse.json({ error: 'Could not create session.', detail: sessionErr?.message }, { status: 500 })
++      return NextResponse.json({ error: 'Could not create session.' }, { status: 500 })
+     }
+     const sessionId = session.id
+ 
+@@ -81,7 +85,7 @@ Requirements:
+       }],
+     })
+ 
+-    const firstQuestion = message.content[0].type === 'text' ? message.content[0].text.trim() : ''
++    const firstQuestion = message.content[0]?.type === 'text' ? message.content[0].text.trim() : ''
+     if (!firstQuestion) return NextResponse.json({ error: 'Failed to generate first question.' }, { status: 500 })
+ 
+     await supabase.from('session_questions').insert({
+diff --git a/lib/auth.ts b/lib/auth.ts
+new file mode 100644
+index 0000000..06b34ad
+--- /dev/null
++++ b/lib/auth.ts
+@@ -0,0 +1,12 @@
++import { createSupabaseServerClient } from '@/lib/supabase-server'
++
++/**
++ * Returns the authenticated user for the current request, or null.
++ * Use this in every protected API route instead of trusting a userId
++ * supplied in the request body (which is spoofable).
++ */
++export async function getAuthedUser() {
++  const supabase = createSupabaseServerClient()
++  const { data: { user } } = await supabase.auth.getUser()
++  return user
++}
+diff --git a/lib/supabase-server.ts b/lib/supabase-server.ts
+index f8d6294..c1b92bc 100644
+--- a/lib/supabase-server.ts
++++ b/lib/supabase-server.ts
+@@ -1,30 +1,27 @@
+ import { createServerClient } from '@supabase/ssr'
+ import { cookies } from 'next/headers'
+ 
+-function clean(s: string | undefined, fallback: string): string {
+-  return (s ?? '').replace(/[^\x20-\x7E]/g, '').trim() || fallback
+-}
++// Anon key is public-safe (ships in the browser bundle). Hardcoded so a
++// missing/corrupted Vercel env var can never break server-side auth.
++const SUPABASE_URL = 'https://bnxshcckbasylmvbsagc.supabase.co'
++const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJueHNoY2NrYmFzeWxtdmJzYWdjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0NjM1NjcsImV4cCI6MjA5ODAzOTU2N30.37XsyjI-1rAohQ2eZiF58dEZ42xvzFn7Bzpp9nRKFto'
+ 
+ export function createSupabaseServerClient() {
+   const cookieStore = cookies()
+-  return createServerClient(
+-  clean(process.env.NEXT_PUBLIC_SUPABASE_URL, 'https://bnxshcckbasylmvbsagc.supabase.co'),
+-clean(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY, 'eyJhbGci••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••'),
+-    {
+-      cookies: {
+-        getAll() {
+-          return cookieStore.getAll()
+-        },
+-        setAll(cookiesToSet) {
+-          try {
+-            cookiesToSet.forEach(({ name, value, options }) =>
+-              cookieStore.set(name, value, options)
+-            )
+-          } catch {
+-            // Server Component — cookies can't be set here; middleware handles refresh
+-          }
+-        },
++  return createServerClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
++    cookies: {
++      getAll() {
++        return cookieStore.getAll()
++      },
++      setAll(cookiesToSet) {
++        try {
++          cookiesToSet.forEach(({ name, value, options }) =>
++            cookieStore.set(name, value, options)
++          )
++        } catch {
++          // Server Component — cookies can't be set here; middleware handles refresh
++        }
+       },
+-    }
+-  )
++    },
++  })
+ }

@@ -64,7 +64,7 @@ Return this exact JSON array (one entry per job, in order):
     }],
   })
 
-  const raw = message.content[0].type === 'text' ? message.content[0].text : '[]'
+  const raw = message.content[0]?.type === 'text' ? message.content[0].text : '[]'
   const jsonText = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim()
   const scores: Array<{ jobIndex: number; matchScore: number; matchedSkills: string[]; missingSkills: string[] }> = JSON.parse(jsonText || '[]')
 

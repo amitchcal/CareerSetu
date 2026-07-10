@@ -17,7 +17,7 @@ It should be answerable in 60-90 seconds and suitable for an entry-to-mid level 
 Output ONLY the question text, no preamble, no numbering.`,
       }],
     })
-    const question = msg.content[0].type === 'text' ? msg.content[0].text.trim() : ''
+    const question = msg.content[0]?.type === 'text' ? msg.content[0].text.trim() : ''
     if (!question) return NextResponse.json({ error: 'Could not generate a question.' }, { status: 500 })
     return NextResponse.json({ question })
   } catch (err: unknown) {

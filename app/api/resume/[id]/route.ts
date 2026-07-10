@@ -25,7 +25,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     .eq('id', params.id)
     .eq('user_id', userId)
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return NextResponse.json({ error: 'Could not load resume.' }, { status: 500 })
   return NextResponse.json({ ok: true })
 }
 
@@ -40,6 +40,6 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
     .eq('id', params.id)
     .eq('user_id', userId)
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return NextResponse.json({ error: 'Could not load resume.' }, { status: 500 })
   return NextResponse.json({ ok: true })
 }

@@ -90,7 +90,7 @@ Give ONE or TWO sentences of honest, specific, encouraging feedback — highligh
     })
 
     const feedback =
-      message.content[0].type === 'text' ? message.content[0].text.trim() : ''
+      message.content[0]?.type === 'text' ? message.content[0].text.trim() : ''
 
     return NextResponse.json({ transcript, feedback })
   } catch (err: unknown) {

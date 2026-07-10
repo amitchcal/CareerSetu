@@ -1,4 +1,4 @@
-﻿import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { anthropic } from '@/lib/anthropic'
 import { getAdminUser } from '@/lib/admin'
@@ -82,7 +82,7 @@ ${shape}`
       messages: [{ role: 'user', content: prompt }],
     })
 
-    const raw = message.content[0].type === 'text' ? message.content[0].text.trim() : ''
+    const raw = message.content[0]?.type === 'text' ? message.content[0].text.trim() : ''
     const jsonText = raw.replace(/^```(?:json)?/i, '').replace(/```$/i, '').trim()
 
     let items: unknown
@@ -152,7 +152,7 @@ ${shape}`
 
     if (insErr) {
       console.error('[admin/questions/generate] insert:', insErr)
-      return NextResponse.json({ error: insErr.message }, { status: 500 })
+      return NextResponse.json({ error: 'Could not save generated questions.' }, { status: 500 })
     }
 
     return NextResponse.json({ generated: inserted?.length ?? 0 })

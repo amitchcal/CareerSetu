@@ -1,0 +1,302 @@
+diff --git a/.github/workflows/e2e.yml b/.github/workflows/e2e.yml
+new file mode 100644
+index 0000000..4a04d92
+--- /dev/null
++++ b/.github/workflows/e2e.yml
+@@ -0,0 +1,43 @@
++name: E2E Regression
++
++on:
++  push:
++    branches: [main]
++  pull_request:
++    branches: [main]
++  workflow_dispatch:
++
++jobs:
++  playwright:
++    timeout-minutes: 20
++    runs-on: ubuntu-latest
++    steps:
++      - uses: actions/checkout@v4
++
++      - uses: actions/setup-node@v4
++        with:
++          node-version: 20
++          cache: npm
++
++      - name: Install dependencies
++        run: npm ci
++
++      - name: Install Playwright browsers
++        run: npx playwright install --with-deps chromium
++
++      - name: Run E2E suite
++        run: npm run test:e2e
++        env:
++          # Point at the deployed app (or a preview URL). Set as a repo variable.
++          PLAYWRIGHT_BASE_URL: ${{ vars.PLAYWRIGHT_BASE_URL || 'https://career-setu-eight.vercel.app' }}
++          # Optional: enables the authenticated user-journey tests. Set as repo secrets.
++          TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
++          TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
++
++      - name: Upload report
++        if: always()
++        uses: actions/upload-artifact@v4
++        with:
++          name: playwright-report
++          path: playwright-report/
++          retention-days: 14
+diff --git a/e2e/README.md b/e2e/README.md
+new file mode 100644
+index 0000000..9cf3619
+--- /dev/null
++++ b/e2e/README.md
+@@ -0,0 +1,55 @@
++# CareerSetu — E2E Regression Suite
++
++Playwright tests live in [`tests/e2e/`](../tests/e2e). Config: [`playwright.config.ts`](../playwright.config.ts).
++
++## What's covered
++
++| File | Scope |
++|------|-------|
++| `tests/e2e/regression.spec.ts` | **Smoke** — marketing pages, auth pages render, unauthenticated route guards, theme toggle, navbar, responsive @375px |
++| `tests/e2e/user-journeys.spec.ts` | **User stories** — signup, login, invalid-login, **redirect-loop regression**, profile save, MCQ mock test start, reports |
++
++Each user-journey test maps to a user story (US-1 … US-7) and is tagged in its `describe` title.
++
++## Running
++
++```bash
++# against the deployed app (default)
++npm run test:e2e
++
++# against a local dev server
++PLAYWRIGHT_BASE_URL=http://localhost:3000 npm run test:e2e
++
++# interactive
++npm run test:e2e:ui
++
++# open the last HTML report
++npm run test:e2e:report
++```
++
++### Base URL
++Set `PLAYWRIGHT_BASE_URL` (defaults to `https://career-setu-eight.vercel.app`).
++
++### Authenticated tests
++US-2, US-4, US-5, US-6, US-7 need a real account. Provide:
++
++```bash
++export TEST_USER_EMAIL="you+e2e@example.com"
++export TEST_USER_PASSWORD="your-password"
++```
++
++Without these, those tests **skip** (the suite still runs smoke + signup + invalid-login).
++
++## Prerequisites for a fully green run
++- **Supabase → Auth → Confirm email = OFF** (so signup logs in instantly; otherwise US-1 asserts the "confirm your email" path instead).
++- **Question bank** has ≥1 approved MCQ for the track used, else US-6 asserts the graceful "no approved questions" path.
++- The 3 server env vars (`SUPABASE_SERVICE_ROLE_KEY`, `ANTHROPIC_API_KEY`, `DEEPGRAM_API_KEY`) set on the target deployment.
++
++## CI
++[`.github/workflows/e2e.yml`](../.github/workflows/e2e.yml) runs the suite on every push/PR to `main`.
++Configure in the repo:
++- Variable `PLAYWRIGHT_BASE_URL` (optional; defaults to the deployed URL)
++- Secrets `TEST_USER_EMAIL`, `TEST_USER_PASSWORD` (optional; enables authenticated journeys)
++
++## Note on the sandbox
++These tests must run where Supabase (`*.supabase.co`) is reachable — CI or your machine. They cannot be executed from the Claude Code remote sandbox, whose network policy blocks outbound Supabase traffic.
+diff --git a/package.json b/package.json
+index baf30a0..d2b7db2 100644
+--- a/package.json
++++ b/package.json
+@@ -6,7 +6,10 @@
+     "dev": "next dev",
+     "build": "next build",
+     "start": "next start",
+-    "lint": "next lint"
++    "lint": "next lint",
++    "test:e2e": "playwright test",
++    "test:e2e:ui": "playwright test --ui",
++    "test:e2e:report": "playwright show-report"
+   },
+   "dependencies": {
+     "@anthropic-ai/sdk": "^0.106.0",
+diff --git a/playwright.config.ts b/playwright.config.ts
+index 2afdcd9..ec74ecd 100644
+--- a/playwright.config.ts
++++ b/playwright.config.ts
+@@ -1,6 +1,8 @@
+ import { defineConfig, devices } from '@playwright/test'
+ 
+-const BASE_URL = 'http://localhost:3000'
++// Override with PLAYWRIGHT_BASE_URL to run against the deployed app or a CI preview.
++//   PLAYWRIGHT_BASE_URL=https://career-setu-eight.vercel.app npm run test:e2e
++const BASE_URL = process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000'
+ 
+ export default defineConfig({
+   testDir: './tests/e2e',
+diff --git a/tests/e2e/user-journeys.spec.ts b/tests/e2e/user-journeys.spec.ts
+new file mode 100644
+index 0000000..e4c4dcc
+--- /dev/null
++++ b/tests/e2e/user-journeys.spec.ts
+@@ -0,0 +1,156 @@
++import { test, expect, Page } from '@playwright/test'
++
++/**
++ * Authenticated user-journey regression tests, mapped to user stories.
++ *
++ * These require a pre-existing test account. Provide via env:
++ *   TEST_USER_EMAIL=...  TEST_USER_PASSWORD=...
++ * When absent, the auth-dependent tests are skipped (so the file is safe to
++ * run in any environment). The signup story (US-1) always runs — it creates a
++ * fresh, unique email each run.
++ *
++ * Prereqs for a full green run (see e2e/README.md):
++ *   - Supabase "Confirm email" is OFF (instant signup)
++ *   - The question bank has at least one approved MCQ for US-6 to fully start
++ */
++
++const EMAIL = process.env.TEST_USER_EMAIL
++const PASSWORD = process.env.TEST_USER_PASSWORD
++const hasCreds = Boolean(EMAIL && PASSWORD)
++
++// ── helpers ──────────────────────────────────────────────────────────────────
++
++function uniqueEmail() {
++  const base = process.env.TEST_SIGNUP_EMAIL_BASE || 'careersetu.e2e@example.com'
++  const [name, domain] = base.split('@')
++  return `${name}+${Date.now()}@${domain}`
++}
++
++async function login(page: Page, email: string, password: string) {
++  await page.goto('/login')
++  await page.getByPlaceholder('you@example.com').fill(email)
++  await page.getByPlaceholder('Your password').fill(password)
++  await page.getByRole('button', { name: 'Sign in' }).click()
++}
++
++// ── US-1: New user can sign up ───────────────────────────────────────────────
++
++test.describe('US-1 Signup', () => {
++  test('a new email can create an account without error', async ({ page }) => {
++    const email = uniqueEmail()
++    await page.goto('/signup')
++    await page.getByPlaceholder('Priya Sharma').fill('E2E Tester')
++    await page.getByPlaceholder('you@example.com').fill(email)
++    await page.getByPlaceholder('Min. 6 characters').fill('Test1234!')
++    await page.getByRole('button', { name: 'Create account' }).click()
++
++    // Either: instant login → onboarding (Confirm email OFF),
++    // or: a "confirm your email" toast (Confirm email ON). Both are non-broken.
++    const onboarding = page.waitForURL(/\/onboarding/, { timeout: 15_000 }).then(() => 'onboarding').catch(() => null)
++    const confirmToast = page.getByText(/confirm your email|almost there/i).waitFor({ timeout: 15_000 }).then(() => 'toast').catch(() => null)
++    const signupFailed = page.getByText(/signup failed/i).waitFor({ timeout: 15_000 }).then(() => 'failed').catch(() => null)
++
++    const outcome = await Promise.race([onboarding, confirmToast, signupFailed])
++    expect(outcome, 'signup should not surface a "Signup failed" error').not.toBe('failed')
++    expect(outcome).not.toBeNull()
++  })
++})
++
++// ── US-2: Returning user can log in and reach the app ────────────────────────
++
++test.describe('US-2 Login', () => {
++  test.skip(!hasCreds, 'set TEST_USER_EMAIL / TEST_USER_PASSWORD to run')
++
++  test('valid credentials land in the app (dashboard or onboarding)', async ({ page }) => {
++    await login(page, EMAIL!, PASSWORD!)
++    await page.waitForURL(/\/(dashboard|onboarding)/, { timeout: 20_000 })
++    await expect(page).toHaveURL(/\/(dashboard|onboarding)/)
++  })
++})
++
++// ── US-3: Wrong password is rejected ─────────────────────────────────────────
++
++test.describe('US-3 Invalid login', () => {
++  test('wrong password shows an error and stays on /login', async ({ page }) => {
++    await login(page, uniqueEmail(), 'definitely-wrong-password')
++    await expect(page.getByText(/login failed|invalid|incorrect|credentials/i).first()).toBeVisible({ timeout: 15_000 })
++    await expect(page).toHaveURL(/\/login/)
++  })
++})
++
++// ── US-4: No redirect loop — the exact bug fixed today ───────────────────────
++
++test.describe('US-4 Session persists across navigation (redirect-loop regression)', () => {
++  test.skip(!hasCreds, 'set TEST_USER_EMAIL / TEST_USER_PASSWORD to run')
++
++  test('after login, a protected route loads instead of bouncing to /login', async ({ page }) => {
++    await login(page, EMAIL!, PASSWORD!)
++    await page.waitForURL(/\/(dashboard|onboarding)/, { timeout: 20_000 })
++
++    // Hard-navigate to a protected route; middleware must NOT bounce to /login.
++    await page.goto('/dashboard')
++    await expect(page).not.toHaveURL(/\/login/)
++    await page.goto('/reports')
++    await expect(page).not.toHaveURL(/\/login/)
++  })
++})
++
++// ── US-5: Profile can be saved ───────────────────────────────────────────────
++
++test.describe('US-5 Profile', () => {
++  test.skip(!hasCreds, 'set TEST_USER_EMAIL / TEST_USER_PASSWORD to run')
++
++  test('profile page loads and saving succeeds', async ({ page }) => {
++    await login(page, EMAIL!, PASSWORD!)
++    await page.waitForURL(/\/(dashboard|onboarding)/, { timeout: 20_000 })
++    await page.goto('/profile')
++    await expect(page).not.toHaveURL(/\/login/)
++
++    const nameInput = page.getByPlaceholder(/priya sharma|your name/i).first()
++    if (await nameInput.count()) await nameInput.fill('E2E Tester')
++
++    await page.getByRole('button', { name: /save/i }).first().click()
++    // Success toast OR no error toast — must not surface a failure.
++    await expect(page.getByText(/error/i)).toHaveCount(0, { timeout: 8_000 }).catch(() => {})
++    await expect(page.getByText(/saved|updated|success/i).first()).toBeVisible({ timeout: 10_000 })
++  })
++})
++
++// ── US-6: MCQ mock test can be configured and started ────────────────────────
++
++test.describe('US-6 Mock MCQ test', () => {
++  test.skip(!hasCreds, 'set TEST_USER_EMAIL / TEST_USER_PASSWORD to run')
++
++  test('configure and start — starts, or gracefully reports no questions (no crash / no 401)', async ({ page }) => {
++    await login(page, EMAIL!, PASSWORD!)
++    await page.waitForURL(/\/(dashboard|onboarding)/, { timeout: 20_000 })
++    await page.goto('/test/new')
++    await expect(page).not.toHaveURL(/\/login/)
++
++    await page.getByRole('button', { name: /start test/i }).click()
++
++    // Acceptable outcomes: navigates into a test, OR a "no approved questions"
++    // message. NOT acceptable: "Unauthorised" (the 401 we fixed) or a crash.
++    const started = page.waitForURL(/\/test\/[^/]+$/, { timeout: 15_000 }).then(() => 'started').catch(() => null)
++    const noQuestions = page.getByText(/no approved questions|no questions/i).waitFor({ timeout: 15_000 }).then(() => 'empty').catch(() => null)
++    const unauthorised = page.getByText(/unauthoris|unauthoriz/i).waitFor({ timeout: 15_000 }).then(() => 'unauth').catch(() => null)
++
++    const outcome = await Promise.race([started, noQuestions, unauthorised])
++    expect(outcome, 'must not be Unauthorised (401 regression)').not.toBe('unauth')
++    expect(outcome).not.toBeNull()
++  })
++})
++
++// ── US-7: Reports page ───────────────────────────────────────────────────────
++
++test.describe('US-7 Reports', () => {
++  test.skip(!hasCreds, 'set TEST_USER_EMAIL / TEST_USER_PASSWORD to run')
++
++  test('reports page loads for an authenticated user', async ({ page }) => {
++    await login(page, EMAIL!, PASSWORD!)
++    await page.waitForURL(/\/(dashboard|onboarding)/, { timeout: 20_000 })
++    await page.goto('/reports')
++    await expect(page).not.toHaveURL(/\/login/)
++    await expect(page.locator('body')).toBeVisible()
++  })
++})

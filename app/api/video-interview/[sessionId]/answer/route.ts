@@ -130,7 +130,7 @@ Generate ONE follow-up interview question (question ${questionNumber + 1} of ${s
       }],
     })
 
-    const nextQuestion = msg.content[0].type === 'text' ? msg.content[0].text.trim() : ''
+    const nextQuestion = msg.content[0]?.type === 'text' ? msg.content[0].text.trim() : ''
 
     await supabase.from('session_questions').insert({
       session_id: sessionId,

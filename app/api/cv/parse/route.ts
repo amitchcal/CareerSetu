@@ -57,7 +57,7 @@ Return this exact JSON shape:
       }],
     })
 
-    const raw = message.content[0].type === 'text' ? message.content[0].text : ''
+    const raw = message.content[0]?.type === 'text' ? message.content[0].text : ''
     const parsed = JSON.parse(raw)
     parsed.cvText = cvText.slice(0, 8000)
 

@@ -32,7 +32,7 @@ Return ONLY valid JSON, no markdown:
 }`,
       }],
     })
-    const raw = msg.content[0].type === 'text' ? msg.content[0].text.trim() : ''
+    const raw = msg.content[0]?.type === 'text' ? msg.content[0].text.trim() : ''
     const parsed = JSON.parse(raw.replace(/^```(?:json)?/i, '').replace(/```$/i, '').trim())
     return NextResponse.json({
       score: parsed.score,

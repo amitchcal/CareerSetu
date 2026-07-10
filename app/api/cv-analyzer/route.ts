@@ -78,7 +78,7 @@ Return ONLY valid JSON in this exact shape, no markdown, no preamble:
       messages: [{ role: 'user', content: prompt }],
     })
 
-    const raw = message.content[0].type === 'text' ? message.content[0].text : ''
+    const raw = message.content[0]?.type === 'text' ? message.content[0].text : ''
     const jsonText = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim()
     const result = JSON.parse(jsonText)
 

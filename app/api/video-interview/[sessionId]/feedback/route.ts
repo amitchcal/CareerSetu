@@ -66,7 +66,7 @@ Return ONLY valid JSON in this exact shape, no markdown, no preamble:
       }],
     })
 
-    const raw = msg.content[0].type === 'text' ? msg.content[0].text.trim() : ''
+    const raw = msg.content[0]?.type === 'text' ? msg.content[0].text.trim() : ''
     const jsonText = raw.replace(/^```(?:json)?/i, '').replace(/```$/i, '').trim()
     const parsed = JSON.parse(jsonText)
 

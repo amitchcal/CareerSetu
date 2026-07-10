@@ -1,6 +1,8 @@
 import { defineConfig, devices } from '@playwright/test'
 
-const BASE_URL = 'http://localhost:3000'
+// Override with PLAYWRIGHT_BASE_URL to run against the deployed app or a CI preview.
+//   PLAYWRIGHT_BASE_URL=https://career-setu-eight.vercel.app npm run test:e2e
+const BASE_URL = process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000'
 
 export default defineConfig({
   testDir: './tests/e2e',

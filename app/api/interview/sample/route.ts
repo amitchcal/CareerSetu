@@ -24,7 +24,7 @@ Requirements:
     })
 
     const question =
-      message.content[0].type === 'text' ? message.content[0].text.trim() : ''
+      message.content[0]?.type === 'text' ? message.content[0].text.trim() : ''
 
     if (!question) {
       return NextResponse.json({ error: 'Failed to generate question' }, { status: 500 })

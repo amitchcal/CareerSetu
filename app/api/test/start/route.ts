@@ -1,4 +1,4 @@
-﻿import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 
@@ -42,8 +42,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No approved questions match this selection yet.' }, { status: 404 })
     }
 
-    // Shuffle and take up to `length`
-    const shuffled = [...pool].sort(() => Math.random() - 0.5)
+    // Shuffle (Fisher–Yates — unbiased) and take up to `length`
+    const shuffled = [...pool]
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1))
+      ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+    }
     const picked = shuffled.slice(0, Math.min(length, shuffled.length))
     const count = picked.length
     const durationSeconds = count * SECONDS_PER_QUESTION

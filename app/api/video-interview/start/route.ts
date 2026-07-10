@@ -1,7 +1,8 @@
-﻿import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { anthropic } from '@/lib/anthropic'
 import { buildInterviewContext, isSenior } from '@/lib/interview-prompt'
+import { getAuthedUser } from '@/lib/auth'
 
 function toDifficulty(seniority: string): string {
   return seniority === 'lead' ? 'experienced' : seniority
@@ -9,13 +10,16 @@ function toDifficulty(seniority: string): string {
 
 export async function POST(req: NextRequest) {
   try {
+    const user = await getAuthedUser()
+    if (!user) return NextResponse.json({ error: 'Unauthorised.' }, { status: 401 })
+
     const body = await req.json()
     const {
-      userId, trackId, companyId, roundType, seniority,
+      trackId, companyId, roundType, seniority,
       language, numQuestions, jobTitle, jobDescription, resumeText,
     } = body
 
-    if (!userId || !trackId || !seniority || !language || !numQuestions) {
+    if (!trackId || !seniority || !language || !numQuestions) {
       return NextResponse.json({ error: 'Missing required fields.' }, { status: 400 })
     }
     if (isSenior(seniority) && !jobDescription?.trim()) {
@@ -48,7 +52,7 @@ export async function POST(req: NextRequest) {
     const { data: session, error: sessionErr } = await supabase
       .from('sessions')
       .insert({
-        user_id: userId, role, difficulty, language, num_questions: numQuestions, status: 'in_progress',
+        user_id: user.id, role, difficulty, language, num_questions: numQuestions, status: 'in_progress',
         track_id: trackId, company_id: companyId ?? null, round_type: roundType ?? null,
         seniority, job_title: jobTitle?.trim() || null, job_description: jobDescription?.trim() || null,
         resume_snapshot: resumeSnapshot,
@@ -59,7 +63,7 @@ export async function POST(req: NextRequest) {
 
     if (sessionErr || !session) {
       console.error('[video-interview/start] session insert:', sessionErr)
-      return NextResponse.json({ error: 'Could not create session.', detail: sessionErr?.message }, { status: 500 })
+      return NextResponse.json({ error: 'Could not create session.' }, { status: 500 })
     }
     const sessionId = session.id
 
@@ -81,7 +85,7 @@ Requirements:
       }],
     })
 
-    const firstQuestion = message.content[0].type === 'text' ? message.content[0].text.trim() : ''
+    const firstQuestion = message.content[0]?.type === 'text' ? message.content[0].text.trim() : ''
     if (!firstQuestion) return NextResponse.json({ error: 'Failed to generate first question.' }, { status: 500 })
 
     await supabase.from('session_questions').insert({
