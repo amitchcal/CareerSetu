@@ -13,7 +13,7 @@ test.describe('US-12 Job search', () => {
     await page.goto('/jobs')
     await expect(page).not.toHaveURL(/\/login/)
     await expect(page.getByRole('heading', { name: /find matching jobs/i })).toBeVisible()
-    await expect(page.getByText(/upload your cv/i)).toBeVisible()
+      await expect(page.getByRole('heading', { name: /upload your cv/i })).toBeVisible()
     await expect(page.getByText(/drag.{0,3}drop|click to upload/i)).toBeVisible()
   })
 })
