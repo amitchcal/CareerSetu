@@ -1,4 +1,5 @@
-import { test, expect, Page } from '@playwright/test'
+import { test, expect } from '@playwright/test'
+import { AuthPage } from './pages/AuthPage'
 
 /**
  * Authenticated user-journey regression tests, mapped to user stories.
@@ -11,6 +12,10 @@ import { test, expect, Page } from '@playwright/test'
  *
  * Prereqs for a full green run (see e2e/README.md):
  *   - Supabase "Confirm email" is OFF (instant signup)
+ *   - TEST_USER_EMAIL / TEST_USER_PASSWORD is a REAL, currently-existing
+ *     account — if Supabase users were ever bulk-deleted, recreate it before
+ *     re-running, otherwise every authenticated test below fails with a
+ *     "Login failed" diagnostic (see AuthPage.expectLandedInApp).
  *   - The question bank has at least one approved MCQ for US-6 to fully start
  */
 
@@ -18,19 +23,10 @@ const EMAIL = process.env.TEST_USER_EMAIL
 const PASSWORD = process.env.TEST_USER_PASSWORD
 const hasCreds = Boolean(EMAIL && PASSWORD)
 
-// ── helpers ──────────────────────────────────────────────────────────────────
-
 function uniqueEmail() {
   const base = process.env.TEST_SIGNUP_EMAIL_BASE || 'careersetu.e2e@example.com'
   const [name, domain] = base.split('@')
   return `${name}+${Date.now()}@${domain}`
-}
-
-async function login(page: Page, email: string, password: string) {
-  await page.goto('/login')
-  await page.getByPlaceholder('you@example.com').fill(email)
-  await page.getByPlaceholder('Your password').fill(password)
-  await page.getByRole('button', { name: 'Sign in' }).click()
 }
 
 // ── US-1: New user can sign up ───────────────────────────────────────────────
@@ -38,11 +34,8 @@ async function login(page: Page, email: string, password: string) {
 test.describe('US-1 Signup', () => {
   test('a new email can create an account without error', async ({ page }) => {
     const email = uniqueEmail()
-    await page.goto('/signup')
-    await page.getByPlaceholder('Priya Sharma').fill('E2E Tester')
-    await page.getByPlaceholder('you@example.com').fill(email)
-    await page.getByPlaceholder('Min. 6 characters').fill('Test1234!')
-    await page.getByRole('button', { name: 'Create account' }).click()
+    const auth = new AuthPage(page)
+    await auth.signup('E2E Tester', email, 'Test1234!')
 
     // Either: instant login → onboarding (Confirm email OFF),
     // or: a "confirm your email" toast (Confirm email ON). Both are non-broken.
@@ -62,9 +55,9 @@ test.describe('US-2 Login', () => {
   test.skip(!hasCreds, 'set TEST_USER_EMAIL / TEST_USER_PASSWORD to run')
 
   test('valid credentials land in the app (dashboard or onboarding)', async ({ page }) => {
-    await login(page, EMAIL!, PASSWORD!)
-    await page.waitForURL(/\/(dashboard|onboarding)/, { timeout: 20_000 })
-    await expect(page).toHaveURL(/\/(dashboard|onboarding)/)
+    const auth = new AuthPage(page)
+    await auth.login(EMAIL!, PASSWORD!)
+    await auth.expectLandedInApp()
   })
 })
 
@@ -72,7 +65,8 @@ test.describe('US-2 Login', () => {
 
 test.describe('US-3 Invalid login', () => {
   test('wrong password shows an error and stays on /login', async ({ page }) => {
-    await login(page, uniqueEmail(), 'definitely-wrong-password')
+    const auth = new AuthPage(page)
+    await auth.login(uniqueEmail(), 'definitely-wrong-password')
     await expect(page.getByText(/login failed|invalid|incorrect|credentials/i).first()).toBeVisible({ timeout: 15_000 })
     await expect(page).toHaveURL(/\/login/)
   })
@@ -84,8 +78,9 @@ test.describe('US-4 Session persists across navigation (redirect-loop regression
   test.skip(!hasCreds, 'set TEST_USER_EMAIL / TEST_USER_PASSWORD to run')
 
   test('after login, a protected route loads instead of bouncing to /login', async ({ page }) => {
-    await login(page, EMAIL!, PASSWORD!)
-    await page.waitForURL(/\/(dashboard|onboarding)/, { timeout: 20_000 })
+    const auth = new AuthPage(page)
+    await auth.login(EMAIL!, PASSWORD!)
+    await auth.expectLandedInApp()
 
     // Hard-navigate to a protected route; middleware must NOT bounce to /login.
     await page.goto('/dashboard')
@@ -101,8 +96,9 @@ test.describe('US-5 Profile', () => {
   test.skip(!hasCreds, 'set TEST_USER_EMAIL / TEST_USER_PASSWORD to run')
 
   test('profile page loads and saving succeeds', async ({ page }) => {
-    await login(page, EMAIL!, PASSWORD!)
-    await page.waitForURL(/\/(dashboard|onboarding)/, { timeout: 20_000 })
+    const auth = new AuthPage(page)
+    await auth.login(EMAIL!, PASSWORD!)
+    await auth.expectLandedInApp()
     await page.goto('/profile')
     await expect(page).not.toHaveURL(/\/login/)
 
@@ -122,8 +118,9 @@ test.describe('US-6 Mock MCQ test', () => {
   test.skip(!hasCreds, 'set TEST_USER_EMAIL / TEST_USER_PASSWORD to run')
 
   test('configure and start — starts, or gracefully reports no questions (no crash / no 401)', async ({ page }) => {
-    await login(page, EMAIL!, PASSWORD!)
-    await page.waitForURL(/\/(dashboard|onboarding)/, { timeout: 20_000 })
+    const auth = new AuthPage(page)
+    await auth.login(EMAIL!, PASSWORD!)
+    await auth.expectLandedInApp()
     await page.goto('/test/new')
     await expect(page).not.toHaveURL(/\/login/)
 
@@ -147,8 +144,9 @@ test.describe('US-7 Reports', () => {
   test.skip(!hasCreds, 'set TEST_USER_EMAIL / TEST_USER_PASSWORD to run')
 
   test('reports page loads for an authenticated user', async ({ page }) => {
-    await login(page, EMAIL!, PASSWORD!)
-    await page.waitForURL(/\/(dashboard|onboarding)/, { timeout: 20_000 })
+    const auth = new AuthPage(page)
+    await auth.login(EMAIL!, PASSWORD!)
+    await auth.expectLandedInApp()
     await page.goto('/reports')
     await expect(page).not.toHaveURL(/\/login/)
     await expect(page.locator('body')).toBeVisible()
