@@ -81,19 +81,18 @@ test.describe('Auth – Login / Signup', () => {
     await expect(page).not.toHaveURL(/\/dashboard/)
     // Page content rendered (hydrated)
     await expect(page.locator('body')).not.toBeEmpty()
-     // Scoped to the header brand link — not `.first()`, which on mobile
+    // Scoped to the header brand link — not `.first()`, which on mobile
     // viewports matches the left illustration panel's logo (that panel is
     // `hidden lg:flex`, so it's legitimately not visible below 1024px and
     // .first() picking it up is a locator bug, not a product bug).
     await expect(page.getByRole('link', { name: /careersetu/i }).first()).toBeVisible({ timeout: 10000 })
   })
 
-   test('signup page loads without redirect', async ({ page }) => {
+  test('signup page loads without redirect', async ({ page }) => {
     await page.goto('/signup', { waitUntil: 'networkidle' })
     await expect(page).not.toHaveURL(/\/dashboard/)
     await expect(page.locator('body')).not.toBeEmpty()
   })
-})
 })
 
 // ── Redirect behaviour for protected routes ───────────────────────────────────
