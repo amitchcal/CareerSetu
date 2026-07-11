@@ -12,64 +12,35 @@
 # Error details
 
 ```
-TimeoutError: page.waitForURL: Timeout 20000ms exceeded.
-=========================== logs ===========================
-waiting for navigation until "load"
-============================================================
+Error: page.goto: net::ERR_NAME_NOT_RESOLVED at https://thecareersetu.in/login
+Call log:
+  - navigating to "https://thecareersetu.in/login", waiting until "load"
+
 ```
 
 # Page snapshot
 
 ```yaml
-- generic [active] [ref=e1]:
-  - generic [ref=e2]:
-    - generic [ref=e6]:
-      - generic [ref=e7]:
-        - img [ref=e9]
-        - generic [ref=e11]: CareerSetu
-      - img [ref=e12]:
-        - generic [ref=e29]: AI
-        - generic [ref=e34]: "Score: 8/10"
-      - heading "Practice interviews. Build confidence." [level=2] [ref=e35]
-      - paragraph [ref=e36]: Join thousands of Indian job seekers who practice with AI to ace their real interviews — in English or Hindi, for any role.
-      - generic [ref=e37]:
-        - paragraph [ref=e38]: “The AI feedback was brutally honest — exactly what I needed before my Bank PO interview.”
-        - paragraph [ref=e39]: — Priya S., cleared Bank PO 2024
-    - generic [ref=e42]:
-      - link "CareerSetu CareerSetu" [ref=e43] [cursor=pointer]:
-        - /url: /
-        - img "CareerSetu" [ref=e44]
-        - generic [ref=e45]: CareerSetu
-      - generic [ref=e46]:
-        - generic [ref=e47]:
-          - heading "Welcome back" [level=1] [ref=e48]
-          - paragraph [ref=e49]: Sign in to continue your interview prep
-        - generic [ref=e50]:
-          - generic [ref=e51]:
-            - generic [ref=e52]:
-              - generic [ref=e53]: Email
-              - textbox "you@example.com" [ref=e54]: you+e2e@example.com
-            - generic [ref=e55]:
-              - generic [ref=e56]:
-                - generic [ref=e57]: Password
-                - link "Forgot password?" [ref=e58] [cursor=pointer]:
-                  - /url: /forgot-password
-              - generic [ref=e59]:
-                - textbox "Your password" [ref=e60]: yourpassword
-                - button [ref=e61] [cursor=pointer]:
-                  - img [ref=e62]
-            - button "Sign in" [ref=e65] [cursor=pointer]
-          - generic [ref=e68]: or
-          - button "Continue with Google" [ref=e70] [cursor=pointer]:
-            - img [ref=e71]
-            - text: Continue with Google
-          - paragraph [ref=e76]:
-            - text: New to CareerSetu?
-            - link "Sign up free" [ref=e77] [cursor=pointer]:
-              - /url: /signup
-  - region "Notifications (F8)":
-    - list
-  - alert [ref=e78]
+- generic [ref=e2]:
+  - img [ref=e4]
+  - generic [ref=e47]:
+    - heading "This site can’t be reached" [level=1] [ref=e48]
+    - paragraph [ref=e50]: Check if there is a typo in thecareersetu.in.
+    - generic [ref=e54]:
+      - generic [ref=e55]:
+        - heading "Try:" [level=4] [ref=e56]
+        - list [ref=e57]:
+          - listitem [ref=e58]:
+            - link "Running Windows Network Diagnostics" [ref=e59] [cursor=pointer]:
+              - /url: javascript:diagnoseErrors()
+          - listitem [ref=e60]: Changing DNS over HTTPS settings
+      - generic [ref=e61]: DNS_PROBE_FINISHED_NXDOMAIN
+    - generic [ref=e62]:
+      - heading "Check your DNS over HTTPS settings" [level=4] [ref=e63]
+      - paragraph [ref=e64]: Go to Opera > Preferences… > System > Use DNS-over-HTTPS instead of the system’s DNS settings and check your DNS-over-HTTPS provider.
+    - generic [ref=e66]:
+      - textbox [active] [ref=e69]: thecareersetu.in
+      - button [ref=e70] [cursor=pointer]
 ```
 
 # Test source
@@ -104,7 +75,8 @@ waiting for navigation until "load"
   27  | }
   28  | 
   29  | async function login(page: Page, email: string, password: string) {
-  30  |   await page.goto('/login')
+> 30  |   await page.goto('/login')
+      |              ^ Error: page.goto: net::ERR_NAME_NOT_RESOLVED at https://thecareersetu.in/login
   31  |   await page.getByPlaceholder('you@example.com').fill(email)
   32  |   await page.getByPlaceholder('Your password').fill(password)
   33  |   await page.getByRole('button', { name: 'Sign in' }).click()
@@ -162,8 +134,7 @@ waiting for navigation until "load"
   85  | 
   86  |   test('after login, a protected route loads instead of bouncing to /login', async ({ page }) => {
   87  |     await login(page, EMAIL!, PASSWORD!)
-> 88  |     await page.waitForURL(/\/(dashboard|onboarding)/, { timeout: 20_000 })
-      |                ^ TimeoutError: page.waitForURL: Timeout 20000ms exceeded.
+  88  |     await page.waitForURL(/\/(dashboard|onboarding)/, { timeout: 20_000 })
   89  | 
   90  |     // Hard-navigate to a protected route; middleware must NOT bounce to /login.
   91  |     await page.goto('/dashboard')
@@ -206,31 +177,4 @@ waiting for navigation until "load"
   128 |     await expect(page).not.toHaveURL(/\/login/)
   129 | 
   130 |     await page.getByRole('button', { name: /start test/i }).click()
-  131 | 
-  132 |     // Acceptable outcomes: navigates into a test, OR a "no approved questions"
-  133 |     // message. NOT acceptable: "Unauthorised" (the 401 we fixed) or a crash.
-  134 |     const started = page.waitForURL(/\/test\/[^/]+$/, { timeout: 15_000 }).then(() => 'started').catch(() => null)
-  135 |     const noQuestions = page.getByText(/no approved questions|no questions/i).waitFor({ timeout: 15_000 }).then(() => 'empty').catch(() => null)
-  136 |     const unauthorised = page.getByText(/unauthoris|unauthoriz/i).waitFor({ timeout: 15_000 }).then(() => 'unauth').catch(() => null)
-  137 | 
-  138 |     const outcome = await Promise.race([started, noQuestions, unauthorised])
-  139 |     expect(outcome, 'must not be Unauthorised (401 regression)').not.toBe('unauth')
-  140 |     expect(outcome).not.toBeNull()
-  141 |   })
-  142 | })
-  143 | 
-  144 | // ── US-7: Reports page ───────────────────────────────────────────────────────
-  145 | 
-  146 | test.describe('US-7 Reports', () => {
-  147 |   test.skip(!hasCreds, 'set TEST_USER_EMAIL / TEST_USER_PASSWORD to run')
-  148 | 
-  149 |   test('reports page loads for an authenticated user', async ({ page }) => {
-  150 |     await login(page, EMAIL!, PASSWORD!)
-  151 |     await page.waitForURL(/\/(dashboard|onboarding)/, { timeout: 20_000 })
-  152 |     await page.goto('/reports')
-  153 |     await expect(page).not.toHaveURL(/\/login/)
-  154 |     await expect(page.locator('body')).toBeVisible()
-  155 |   })
-  156 | })
-  157 | 
 ```

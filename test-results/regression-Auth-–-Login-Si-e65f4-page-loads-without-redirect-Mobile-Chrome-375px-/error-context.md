@@ -12,45 +12,10 @@
 # Error details
 
 ```
-Error: expect(locator).toBeVisible() failed
-
-Locator:  getByText('CareerSetu').first()
-Expected: visible
-Received: hidden
-Timeout:  10000ms
-
+Error: page.goto: net::ERR_NAME_NOT_RESOLVED at https://thecareersetu.in/login
 Call log:
-  - Expect "toBeVisible" with timeout 10000ms
-  - waiting for getByText('CareerSetu').first()
-    23 × locator resolved to <span class="text-xl font-bold tracking-tight">CareerSetu</span>
-       - unexpected value "hidden"
+  - navigating to "https://thecareersetu.in/login", waiting until "networkidle"
 
-```
-
-```yaml
-- link "CareerSetu CareerSetu":
-  - /url: /
-  - img "CareerSetu"
-  - text: CareerSetu
-- heading "Welcome back" [level=1]
-- paragraph: Sign in to continue your interview prep
-- text: Email
-- textbox "you@example.com"
-- text: Password
-- link "Forgot password?":
-  - /url: /forgot-password
-- textbox "Your password"
-- button
-- button "Sign in"
-- text: or
-- button "Continue with Google"
-- paragraph:
-  - text: New to CareerSetu?
-  - link "Sign up free":
-    - /url: /signup
-- region "Notifications (F8)":
-  - list
-- alert
 ```
 
 # Test source
@@ -135,12 +100,12 @@ Call log:
   77  | 
   78  | test.describe('Auth – Login / Signup', () => {
   79  |   test('login page loads without redirect', async ({ page }) => {
-  80  |     await page.goto('/login', { waitUntil: 'networkidle' })
+> 80  |     await page.goto('/login', { waitUntil: 'networkidle' })
+      |                ^ Error: page.goto: net::ERR_NAME_NOT_RESOLVED at https://thecareersetu.in/login
   81  |     await expect(page).not.toHaveURL(/\/dashboard/)
   82  |     // Page content rendered (hydrated)
   83  |     await expect(page.locator('body')).not.toBeEmpty()
-> 84  |     await expect(page.getByText('CareerSetu').first()).toBeVisible({ timeout: 10000 })
-      |                                                        ^ Error: expect(locator).toBeVisible() failed
+  84  |     await expect(page.getByText('CareerSetu').first()).toBeVisible({ timeout: 10000 })
   85  |   })
   86  | 
   87  |   test('signup page loads without redirect', async ({ page }) => {
@@ -237,8 +202,4 @@ Call log:
   178 |   for (const p of pages) {
   179 |     test(`${p} no horizontal overflow at 375px`, async ({ page }) => {
   180 |       await page.setViewportSize({ width: 375, height: 812 })
-  181 |       await page.goto(p)
-  182 |       const bodyWidth = await page.evaluate(() => document.body.scrollWidth)
-  183 |       expect(bodyWidth).toBeLessThanOrEqual(390) // allow a tiny margin
-  184 |     })
 ```
