@@ -35,5 +35,10 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+
 .vercel
 .env*
+
+/playwright-report/
+/test-results/
+/blob-report/
