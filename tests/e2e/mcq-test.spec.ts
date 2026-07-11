@@ -38,11 +38,16 @@ test.describe('US-6 Mock MCQ test', () => {
     const started = await page.waitForURL(/\/test\/[^/]+$/, { timeout: 15_000 }).then(() => true).catch(() => false)
     test.skip(!started, 'no approved questions available for this environment — nothing to assert on')
 
-       // A question and at least one selectable answer option should render.
+           // The test page does a second round-trip on mount to fetch the question
+    // set (its own client-side loading spinner), separate from the initial
+    // test/start API call — wait for that spinner to clear before asserting
+    // on question content, instead of racing it.
+    await expect(page.locator('body')).toContainText(/./)
+    await expect(page.locator('.animate-spin')).toHaveCount(0, { timeout: 20_000 })
+
     // Answer options are <li><button>...</button></li> inside the question's
     // <ul> — scoped narrowly so this doesn't match unrelated page buttons
     // (e.g. a hidden "report issue" chip elsewhere on the page).
-    await expect(page.locator('body')).toContainText(/./)
     const options = page.locator('ul li button')
     await expect(options.first()).toBeVisible({ timeout: 10_000 })
   })
