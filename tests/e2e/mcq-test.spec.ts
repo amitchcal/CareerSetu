@@ -38,9 +38,12 @@ test.describe('US-6 Mock MCQ test', () => {
     const started = await page.waitForURL(/\/test\/[^/]+$/, { timeout: 15_000 }).then(() => true).catch(() => false)
     test.skip(!started, 'no approved questions available for this environment — nothing to assert on')
 
-    // A question and at least one selectable option should render.
+       // A question and at least one selectable answer option should render.
+    // Answer options are <li><button>...</button></li> inside the question's
+    // <ul> — scoped narrowly so this doesn't match unrelated page buttons
+    // (e.g. a hidden "report issue" chip elsewhere on the page).
     await expect(page.locator('body')).toContainText(/./)
-    const options = page.locator('input[type="radio"], [role="radio"], button').filter({ hasText: /.+/ })
+    const options = page.locator('ul li button')
     await expect(options.first()).toBeVisible({ timeout: 10_000 })
   })
 })
