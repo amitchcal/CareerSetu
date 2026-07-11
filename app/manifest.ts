@@ -10,9 +10,11 @@ export default function manifest(): MetadataRoute.Manifest {
     background_color: '#ffffff',
     theme_color: '#4F46E5',
     orientation: 'portrait',
-    icons: [
-      { src: '/icon-192.png', sizes: '192x192', type: 'image/png' },
-      { src: '/icon-512.png', sizes: '512x512', type: 'image/png' },
+       icons: [
+      // 192x192 and 512x512 PNGs are the PWA-recommended sizes, but only
+      // icon.svg currently exists in /public — referencing files that don't
+      // exist 404s on every load (some browsers eagerly fetch manifest
+      // icons). Add real 192/512 PNGs here once a final logo is ready.
       { src: '/icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'maskable' },
     ],
     categories: ['education', 'productivity'],
