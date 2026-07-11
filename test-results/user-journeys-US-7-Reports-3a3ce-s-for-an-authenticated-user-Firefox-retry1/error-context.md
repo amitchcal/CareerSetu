@@ -1,0 +1,186 @@
+# Instructions
+
+- Following Playwright test failed.
+- Explain why, be concise, respect Playwright best practices.
+- Provide a snippet of code with the fix, if possible.
+
+# Test info
+
+- Name: user-journeys.spec.ts >> US-7 Reports >> reports page loads for an authenticated user
+- Location: tests\e2e\user-journeys.spec.ts:149:7
+
+# Error details
+
+```
+TimeoutError: page.waitForURL: Timeout 20000ms exceeded.
+=========================== logs ===========================
+waiting for navigation until "load"
+============================================================
+```
+
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e6]:
+      - generic [ref=e7]:
+        - img [ref=e9]
+        - generic [ref=e11]: CareerSetu
+      - img [ref=e12]:
+        - text: AI
+        - text: "Score: 8/10"
+      - heading "Practice interviews. Build confidence." [level=2] [ref=e35]
+      - paragraph [ref=e36]: Join thousands of Indian job seekers who practice with AI to ace their real interviews — in English or Hindi, for any role.
+      - generic [ref=e37]:
+        - paragraph [ref=e38]: “The AI feedback was brutally honest — exactly what I needed before my Bank PO interview.”
+        - paragraph [ref=e39]: — Priya S., cleared Bank PO 2024
+    - generic [ref=e42]:
+      - link "CareerSetu CareerSetu" [ref=e43] [cursor=pointer]:
+        - /url: /
+        - img "CareerSetu" [ref=e44]
+        - generic [ref=e45]: CareerSetu
+      - generic [ref=e46]:
+        - generic [ref=e47]:
+          - heading "Welcome back" [level=1] [ref=e48]
+          - paragraph [ref=e49]: Sign in to continue your interview prep
+        - generic [ref=e50]:
+          - generic [ref=e51]:
+            - generic [ref=e52]:
+              - generic [ref=e53]: Email
+              - textbox "you@example.com" [ref=e54]: you+e2e@example.com
+            - generic [ref=e55]:
+              - generic [ref=e56]:
+                - generic [ref=e57]: Password
+                - link "Forgot password?" [ref=e58] [cursor=pointer]:
+                  - /url: /forgot-password
+              - generic [ref=e59]:
+                - textbox "Your password" [ref=e60]: yourpassword
+                - button [ref=e61] [cursor=pointer]:
+                  - img [ref=e62]
+            - button "Sign in" [ref=e65] [cursor=pointer]
+          - generic [ref=e68]: or
+          - button "Continue with Google" [ref=e70] [cursor=pointer]:
+            - img [ref=e71]
+            - text: Continue with Google
+          - paragraph [ref=e76]:
+            - text: New to CareerSetu?
+            - link "Sign up free" [ref=e77] [cursor=pointer]:
+              - /url: /signup
+  - region "Notifications (F8)":
+    - list
+  - alert [ref=e78]
+```
+
+# Test source
+
+```ts
+  51  |     const signupFailed = page.getByText(/signup failed/i).waitFor({ timeout: 15_000 }).then(() => 'failed').catch(() => null)
+  52  | 
+  53  |     const outcome = await Promise.race([onboarding, confirmToast, signupFailed])
+  54  |     expect(outcome, 'signup should not surface a "Signup failed" error').not.toBe('failed')
+  55  |     expect(outcome).not.toBeNull()
+  56  |   })
+  57  | })
+  58  | 
+  59  | // ── US-2: Returning user can log in and reach the app ────────────────────────
+  60  | 
+  61  | test.describe('US-2 Login', () => {
+  62  |   test.skip(!hasCreds, 'set TEST_USER_EMAIL / TEST_USER_PASSWORD to run')
+  63  | 
+  64  |   test('valid credentials land in the app (dashboard or onboarding)', async ({ page }) => {
+  65  |     await login(page, EMAIL!, PASSWORD!)
+  66  |     await page.waitForURL(/\/(dashboard|onboarding)/, { timeout: 20_000 })
+  67  |     await expect(page).toHaveURL(/\/(dashboard|onboarding)/)
+  68  |   })
+  69  | })
+  70  | 
+  71  | // ── US-3: Wrong password is rejected ─────────────────────────────────────────
+  72  | 
+  73  | test.describe('US-3 Invalid login', () => {
+  74  |   test('wrong password shows an error and stays on /login', async ({ page }) => {
+  75  |     await login(page, uniqueEmail(), 'definitely-wrong-password')
+  76  |     await expect(page.getByText(/login failed|invalid|incorrect|credentials/i).first()).toBeVisible({ timeout: 15_000 })
+  77  |     await expect(page).toHaveURL(/\/login/)
+  78  |   })
+  79  | })
+  80  | 
+  81  | // ── US-4: No redirect loop — the exact bug fixed today ───────────────────────
+  82  | 
+  83  | test.describe('US-4 Session persists across navigation (redirect-loop regression)', () => {
+  84  |   test.skip(!hasCreds, 'set TEST_USER_EMAIL / TEST_USER_PASSWORD to run')
+  85  | 
+  86  |   test('after login, a protected route loads instead of bouncing to /login', async ({ page }) => {
+  87  |     await login(page, EMAIL!, PASSWORD!)
+  88  |     await page.waitForURL(/\/(dashboard|onboarding)/, { timeout: 20_000 })
+  89  | 
+  90  |     // Hard-navigate to a protected route; middleware must NOT bounce to /login.
+  91  |     await page.goto('/dashboard')
+  92  |     await expect(page).not.toHaveURL(/\/login/)
+  93  |     await page.goto('/reports')
+  94  |     await expect(page).not.toHaveURL(/\/login/)
+  95  |   })
+  96  | })
+  97  | 
+  98  | // ── US-5: Profile can be saved ───────────────────────────────────────────────
+  99  | 
+  100 | test.describe('US-5 Profile', () => {
+  101 |   test.skip(!hasCreds, 'set TEST_USER_EMAIL / TEST_USER_PASSWORD to run')
+  102 | 
+  103 |   test('profile page loads and saving succeeds', async ({ page }) => {
+  104 |     await login(page, EMAIL!, PASSWORD!)
+  105 |     await page.waitForURL(/\/(dashboard|onboarding)/, { timeout: 20_000 })
+  106 |     await page.goto('/profile')
+  107 |     await expect(page).not.toHaveURL(/\/login/)
+  108 | 
+  109 |     const nameInput = page.getByPlaceholder(/priya sharma|your name/i).first()
+  110 |     if (await nameInput.count()) await nameInput.fill('E2E Tester')
+  111 | 
+  112 |     await page.getByRole('button', { name: /save/i }).first().click()
+  113 |     // Success toast OR no error toast — must not surface a failure.
+  114 |     await expect(page.getByText(/error/i)).toHaveCount(0, { timeout: 8_000 }).catch(() => {})
+  115 |     await expect(page.getByText(/saved|updated|success/i).first()).toBeVisible({ timeout: 10_000 })
+  116 |   })
+  117 | })
+  118 | 
+  119 | // ── US-6: MCQ mock test can be configured and started ────────────────────────
+  120 | 
+  121 | test.describe('US-6 Mock MCQ test', () => {
+  122 |   test.skip(!hasCreds, 'set TEST_USER_EMAIL / TEST_USER_PASSWORD to run')
+  123 | 
+  124 |   test('configure and start — starts, or gracefully reports no questions (no crash / no 401)', async ({ page }) => {
+  125 |     await login(page, EMAIL!, PASSWORD!)
+  126 |     await page.waitForURL(/\/(dashboard|onboarding)/, { timeout: 20_000 })
+  127 |     await page.goto('/test/new')
+  128 |     await expect(page).not.toHaveURL(/\/login/)
+  129 | 
+  130 |     await page.getByRole('button', { name: /start test/i }).click()
+  131 | 
+  132 |     // Acceptable outcomes: navigates into a test, OR a "no approved questions"
+  133 |     // message. NOT acceptable: "Unauthorised" (the 401 we fixed) or a crash.
+  134 |     const started = page.waitForURL(/\/test\/[^/]+$/, { timeout: 15_000 }).then(() => 'started').catch(() => null)
+  135 |     const noQuestions = page.getByText(/no approved questions|no questions/i).waitFor({ timeout: 15_000 }).then(() => 'empty').catch(() => null)
+  136 |     const unauthorised = page.getByText(/unauthoris|unauthoriz/i).waitFor({ timeout: 15_000 }).then(() => 'unauth').catch(() => null)
+  137 | 
+  138 |     const outcome = await Promise.race([started, noQuestions, unauthorised])
+  139 |     expect(outcome, 'must not be Unauthorised (401 regression)').not.toBe('unauth')
+  140 |     expect(outcome).not.toBeNull()
+  141 |   })
+  142 | })
+  143 | 
+  144 | // ── US-7: Reports page ───────────────────────────────────────────────────────
+  145 | 
+  146 | test.describe('US-7 Reports', () => {
+  147 |   test.skip(!hasCreds, 'set TEST_USER_EMAIL / TEST_USER_PASSWORD to run')
+  148 | 
+  149 |   test('reports page loads for an authenticated user', async ({ page }) => {
+  150 |     await login(page, EMAIL!, PASSWORD!)
+> 151 |     await page.waitForURL(/\/(dashboard|onboarding)/, { timeout: 20_000 })
+      |                ^ TimeoutError: page.waitForURL: Timeout 20000ms exceeded.
+  152 |     await page.goto('/reports')
+  153 |     await expect(page).not.toHaveURL(/\/login/)
+  154 |     await expect(page.locator('body')).toBeVisible()
+  155 |   })
+  156 | })
+  157 | 
+```

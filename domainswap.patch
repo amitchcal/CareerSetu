@@ -1,0 +1,89 @@
+diff --git a/.github/workflows/e2e.yml b/.github/workflows/e2e.yml
+index 4a04d92..64c9358 100644
+--- a/.github/workflows/e2e.yml
++++ b/.github/workflows/e2e.yml
+@@ -29,7 +29,7 @@ jobs:
+         run: npm run test:e2e
+         env:
+           # Point at the deployed app (or a preview URL). Set as a repo variable.
+-          PLAYWRIGHT_BASE_URL: ${{ vars.PLAYWRIGHT_BASE_URL || 'https://career-setu-eight.vercel.app' }}
++          PLAYWRIGHT_BASE_URL: ${{ vars.PLAYWRIGHT_BASE_URL || 'https://thecareersetu.in' }}
+           # Optional: enables the authenticated user-journey tests. Set as repo secrets.
+           TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
+           TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
+diff --git a/app/layout.tsx b/app/layout.tsx
+index 4930cfe..b9d4f25 100644
+--- a/app/layout.tsx
++++ b/app/layout.tsx
+@@ -9,7 +9,7 @@ const inter = Inter({
+   variable: "--font-inter",
+ });
+ 
+-const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://careersetu.in";
++const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://thecareersetu.in";
+ 
+ export const metadata: Metadata = {
+   metadataBase: new URL(BASE_URL),
+diff --git a/app/robots.ts b/app/robots.ts
+index ec5ba35..958bc4d 100644
+--- a/app/robots.ts
++++ b/app/robots.ts
+@@ -1,6 +1,6 @@
+ import { MetadataRoute } from "next";
+ 
+-const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://careersetu.in";
++const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://thecareersetu.in";
+ 
+ export default function robots(): MetadataRoute.Robots {
+   return {
+diff --git a/app/sitemap.ts b/app/sitemap.ts
+index d2b5bb4..4d0b91b 100644
+--- a/app/sitemap.ts
++++ b/app/sitemap.ts
+@@ -1,6 +1,6 @@
+ import { MetadataRoute } from "next";
+ 
+-const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://careersetu.in";
++const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://thecareersetu.in";
+ 
+ export default function sitemap(): MetadataRoute.Sitemap {
+   const now = new Date();
+diff --git a/e2e/README.md b/e2e/README.md
+index d4170c9..a9448b0 100644
+--- a/e2e/README.md
++++ b/e2e/README.md
+@@ -40,7 +40,7 @@ npm run test:e2e:report
+ ```
+ 
+ ### Base URL
+-Set `PLAYWRIGHT_BASE_URL` (defaults to `https://career-setu-eight.vercel.app`).
++Set `PLAYWRIGHT_BASE_URL` (defaults to `https://thecareersetu.in`).
+ 
+ ### Authenticated tests
+ US-2, US-4, US-5, US-6, US-7 need a real account. Provide:
+diff --git a/e2e/TEST_PLAN.md b/e2e/TEST_PLAN.md
+index f79b53e..2c69991 100644
+--- a/e2e/TEST_PLAN.md
++++ b/e2e/TEST_PLAN.md
+@@ -17,7 +17,7 @@ it reaches production — the way today's login/session/IDOR regressions should
+ ## 3. Environments
+ | Env | Base URL | Notes |
+ |---|---|---|
+-| Production (deployed) | `PLAYWRIGHT_BASE_URL` env, defaults to `https://career-setu-eight.vercel.app` | default target |
++| Production (deployed) | `PLAYWRIGHT_BASE_URL` env, defaults to `https://thecareersetu.in` | default target |
+ | Local dev | `PLAYWRIGHT_BASE_URL=http://localhost:3000` | run against `npm run dev` |
+ | CI | GitHub Actions (`.github/workflows/e2e.yml`) | runs on push/PR to `main` |
+ 
+diff --git a/playwright.config.ts b/playwright.config.ts
+index ec74ecd..65af210 100644
+--- a/playwright.config.ts
++++ b/playwright.config.ts
+@@ -1,7 +1,7 @@
+ import { defineConfig, devices } from '@playwright/test'
+ 
+ // Override with PLAYWRIGHT_BASE_URL to run against the deployed app or a CI preview.
+-//   PLAYWRIGHT_BASE_URL=https://career-setu-eight.vercel.app npm run test:e2e
++//   PLAYWRIGHT_BASE_URL=https://thecareersetu.in npm run test:e2e
+ const BASE_URL = process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000'
+ 
+ export default defineConfig({
