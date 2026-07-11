@@ -44,7 +44,9 @@ test.describe('US-9 Dashboard', () => {
   test('greets the user and shows the primary CTA', async ({ authedPage: page }) => {
     await page.goto('/dashboard')
     await expect(page).not.toHaveURL(/\/login/)
-    await expect(page.getByText(/ready to practise/i)).toBeVisible()
-    await expect(page.getByText(/start practising/i)).toBeVisible()
+    // The page legitimately has two "ready to practise"-ish elements (the
+    // h1 greeting and a separate CTA card's <p>) — scope to the heading.
+    await expect(page.getByRole('heading', { name: /ready to practise/i })).toBeVisible()
+    await expect(page.getByText(/start practising/i).first()).toBeVisible()
   })
 })
