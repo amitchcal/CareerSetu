@@ -88,14 +88,12 @@ test.describe('Auth – Login / Signup', () => {
     await expect(page.getByRole('link', { name: /careersetu/i }).first()).toBeVisible({ timeout: 10000 })
   })
 
-  test('signup page loads without redirect', async ({ page }) => {
-  })
-
-  test('signup page loads without redirect', async ({ page }) => {
+   test('signup page loads without redirect', async ({ page }) => {
     await page.goto('/signup', { waitUntil: 'networkidle' })
     await expect(page).not.toHaveURL(/\/dashboard/)
     await expect(page.locator('body')).not.toBeEmpty()
   })
+})
 })
 
 // ── Redirect behaviour for protected routes ───────────────────────────────────
