@@ -1,15 +1,27 @@
 # CareerSetu — E2E Regression Suite
 
 Playwright tests live in [`tests/e2e/`](../tests/e2e). Config: [`playwright.config.ts`](../playwright.config.ts).
+Full test plan and traceability matrix: [`e2e/TEST_PLAN.md`](TEST_PLAN.md).
 
 ## What's covered
 
 | File | Scope |
 |------|-------|
 | `tests/e2e/regression.spec.ts` | **Smoke** — marketing pages, auth pages render, unauthenticated route guards, theme toggle, navbar, responsive @375px |
-| `tests/e2e/user-journeys.spec.ts` | **User stories** — signup, login, invalid-login, **redirect-loop regression**, profile save, MCQ mock test start, reports |
+| `tests/e2e/user-journeys.spec.ts` | Signup, login, invalid-login, **redirect-loop regression**, profile save, MCQ mock test start, reports |
+| `tests/e2e/onboarding.spec.ts` | Profile step render + save (RLS/NOT NULL regression guard) |
+| `tests/e2e/practice-hub.spec.ts` | Dashboard + Practice hub navigation to all 3 modes |
+| `tests/e2e/mcq-test.spec.ts` | MCQ config → start → question render (401 regression guard) |
+| `tests/e2e/coding.spec.ts` | Coding problem list → open problem |
+| `tests/e2e/resume-builder.spec.ts` | Resume list + create (IDOR regression guard) |
+| `tests/e2e/jobs.spec.ts` | Job search form + submission smoke |
+| `tests/e2e/subscription.spec.ts` | Plan page renders current plan |
+| `tests/e2e/cv-analyzer.spec.ts` | Upload-zone render, Analyze button gating |
+| `tests/e2e/video-interview.spec.ts` | Config page render (IDOR regression guard) |
+| `tests/e2e/password-recovery.spec.ts` | Forgot-password request flow |
 
-Each user-journey test maps to a user story (US-1 … US-7) and is tagged in its `describe` title.
+Page objects live in [`tests/e2e/pages/`](../tests/e2e/pages); shared login/fixtures in [`tests/e2e/fixtures.ts`](../tests/e2e/fixtures.ts).
+Every user-journey test maps to a user story (US-1 … US-17) — see the traceability matrix in `TEST_PLAN.md` for which regression each one guards.
 
 ## Running
 
