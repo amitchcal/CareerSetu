@@ -8,12 +8,13 @@ export default defineConfig({
   testDir: './tests/e2e',
   timeout: 30_000,
   retries: 1,
+  // Capped rather than the default (CPU core count). Auth-heavy specs each
+  // log in via Supabase; running too many logins at once across workers was
+  // triggering occasional timeouts (observed as "flaky" login retries) —
+  // most likely Supabase auth rate-limiting concurrent sign-ins from the
+  // same test account. This trades a bit of wall-clock time for reliability.
+  workers: process.env.CI ? 2 : 3,
   reporter: [['list'], ['html', { open: 'never', outputFolder: 'playwright-report' }]],
-  use: {
-    baseURL: BASE_URL,
-    screenshot: 'only-on-failure',
-    video: 'off',
-  },
   projects: [
     {
       name: 'Chromium (built-in)',
