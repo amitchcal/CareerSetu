@@ -15,6 +15,9 @@ export default defineConfig({
   // same test account. This trades a bit of wall-clock time for reliability.
   workers: process.env.CI ? 2 : 3,
   reporter: [['list'], ['html', { open: 'never', outputFolder: 'playwright-report' }]],
+  // Applied to every project so relative paths in page.goto('/…') and the
+  // request fixture resolve against the target app.
+  use: { baseURL: BASE_URL },
   projects: [
     {
       name: 'Chromium (built-in)',
